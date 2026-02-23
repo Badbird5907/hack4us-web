@@ -8,8 +8,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Hack4US",
-  description: "Hack4US",
+  title: "HACK4US",
+  description: "HACK4US",
 };
 
 export default function RootLayout({

@@ -91,7 +91,7 @@ export function Hero() {
         ))}
       </svg>
 
-      {/* Right Angle Triangle Ruler - Bottom Right: right angle snapped to nearest grid intersection */}
+      {/* Right Angle Triangle Ruler - Bottom Right: right angle snapped to nearest grid intersection
       <svg
         className="absolute hidden lg:block h-[300px] w-[300px] text-primary/40 rotate-180"
         style={brRulerPos ?? { display: "none" }}
@@ -100,24 +100,25 @@ export function Hero() {
         overflow="visible"
         aria-hidden="true"
       >
-       {/* Outer triangle: right angle at top-left (0,0) */}
+       {/* Outer triangle: right angle at top-left (0,0) *}
        <path d="M100 0 L0 0 L0 100 Z" stroke="currentColor" strokeWidth="1" fill="none" />
-        {/* Inner cutout */}
+        {/* Inner cutout *}
         <path d="M80 10 L10 10 L10 80 Z" stroke="currentColor" strokeWidth="0.5" fill="none" />
-        {/* Tick marks along top horizontal edge (y=0) — every 20 units = 1 grid cell at lg:300px */}
+        {/* Tick marks along top horizontal edge (y=0) — every 20 units = 1 grid cell at lg:300px *}
         {[...Array(4)].map((_, i) => (
           <line key={`t-${i}`} x1={20 * (i + 1)} y1="0" x2={20 * (i + 1)} y2={i % 2 === 0 ? "7" : "4"} stroke="currentColor" strokeWidth={i % 2 === 0 ? "0.75" : "0.4"} />
         ))}
-        {/* Tick marks along left vertical edge (x=0) */}
+        {/* Tick marks along left vertical edge (x=0) *}
         {[...Array(4)].map((_, i) => (
           <line key={`l-${i}`} x1="0" y1={20 * (i + 1)} x2={i % 2 === 0 ? "7" : "4"} y2={20 * (i + 1)} stroke="currentColor" strokeWidth={i % 2 === 0 ? "0.75" : "0.4"} />
         ))}
-      </svg>
+      </svg> */}
 
       {/* Scattered 4-Pointed Stars Background */}
       {/* Large star - top right area */}
       <svg
-        className="absolute top-32 right-1/4 h-32 w-32 text-white/90 lg:h-48 lg:w-48"
+        className="star-glow absolute top-32 right-1/4 h-32 w-32 text-white/90 lg:h-48 lg:w-48"
+        style={{ "--star-duration": "8s", "--star-delay": "0s", "--star-min-opacity": "0.5", "--star-min-scale": "0.8" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -127,7 +128,8 @@ export function Hero() {
 
       {/* Medium star - left side */}
       <svg
-        className="absolute top-1/4 left-1/3 h-20 w-20 text-white/80 lg:h-28 lg:w-28"
+        className="star-glow absolute top-1/4 left-1/3 h-20 w-20 text-white/80 lg:h-28 lg:w-28"
+        style={{ "--star-duration": "7s", "--star-delay": "2.4s", "--star-min-opacity": "0.55", "--star-min-scale": "0.85" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -137,7 +139,8 @@ export function Hero() {
 
       {/* Small star - bottom area */}
       <svg
-        className="absolute bottom-1/3 right-1/3 h-12 w-12 text-white/85"
+        className="star-glow absolute bottom-1/3 right-1/3 h-12 w-12 text-white/85"
+        style={{ "--star-duration": "6s", "--star-delay": "1.2s", "--star-min-opacity": "0.5", "--star-min-scale": "0.75" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -147,7 +150,8 @@ export function Hero() {
 
       {/* Tiny stars scattered */}
       <svg
-        className="absolute top-40 right-20 h-6 w-6 text-white/100"
+        className="star-glow absolute top-40 right-20 h-6 w-6 text-white"
+        style={{ "--star-duration": "5s", "--star-delay": "0.6s", "--star-min-opacity": "0.4", "--star-min-scale": "0.7" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -156,7 +160,8 @@ export function Hero() {
       </svg>
 
       <svg
-        className="absolute top-2/3 left-20 h-8 w-8 text-white/90"
+        className="star-glow absolute top-2/3 left-20 h-8 w-8 text-white/90"
+        style={{ "--star-duration": "7s", "--star-delay": "3.5s", "--star-min-opacity": "0.45", "--star-min-scale": "0.7" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -165,7 +170,8 @@ export function Hero() {
       </svg>
 
       <svg
-        className="absolute top-1/2 right-40 h-10 w-10 text-white/85 hidden md:block"
+        className="star-glow absolute top-1/2 right-40 h-10 w-10 text-white/85 hidden md:block"
+        style={{ "--star-duration": "5.5s", "--star-delay": "1.8s", "--star-min-opacity": "0.4", "--star-min-scale": "0.75" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -175,7 +181,8 @@ export function Hero() {
 
       {/* Elongated star/sparkle */}
       <svg
-        className="absolute top-1/3 right-1/2 h-16 w-8 text-white/80 rotate-12"
+        className="star-glow absolute top-1/3 right-1/2 h-16 w-8 text-white/80 rotate-12"
+        style={{ "--star-duration": "8s", "--star-delay": "4s", "--star-min-opacity": "0.45", "--star-min-scale": "0.8" } as React.CSSProperties}
         viewBox="0 0 50 100"
         fill="currentColor"
         aria-hidden="true"
@@ -185,7 +192,8 @@ export function Hero() {
 
       {/* Primary colored stars for accent */}
       <svg
-        className="absolute bottom-1/4 left-1/4 h-6 w-6 text-primary/100"
+        className="star-glow-primary absolute bottom-1/4 left-1/4 h-6 w-6 text-primary/100"
+        style={{ "--star-duration": "6s", "--star-delay": "0.8s", "--star-min-opacity": "0.5", "--star-min-scale": "0.7" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -194,7 +202,8 @@ export function Hero() {
       </svg>
 
       <svg
-        className="absolute top-1/4 right-16 h-4 w-4 text-primary/100 hidden lg:block"
+        className="star-glow-primary absolute top-1/4 right-16 h-4 w-4 text-primary/100 hidden lg:block"
+        style={{ "--star-duration": "5s", "--star-delay": "3s", "--star-min-opacity": "0.5", "--star-min-scale": "0.65" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -204,7 +213,8 @@ export function Hero() {
 
       {/* Additional larger stars for more visibility */}
       <svg
-        className="absolute top-20 right-1/3 h-24 w-24 text-white/75"
+        className="star-glow absolute top-20 right-1/3 h-24 w-24 text-white/75"
+        style={{ "--star-duration": "9s", "--star-delay": "1.4s", "--star-min-opacity": "0.4", "--star-min-scale": "0.82" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -213,7 +223,8 @@ export function Hero() {
       </svg>
 
       <svg
-        className="absolute bottom-40 right-20 h-16 w-16 text-white/80 hidden md:block"
+        className="star-glow absolute bottom-40 right-20 h-16 w-16 text-white/80 hidden md:block"
+        style={{ "--star-duration": "6.5s", "--star-delay": "4.5s", "--star-min-opacity": "0.45", "--star-min-scale": "0.78" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"
@@ -222,7 +233,8 @@ export function Hero() {
       </svg>
 
       <svg
-        className="absolute top-1/2 left-1/4 h-10 w-10 text-primary/95"
+        className="star-glow-primary absolute top-1/2 left-1/4 h-10 w-10 text-primary/95"
+        style={{ "--star-duration": "7s", "--star-delay": "2s", "--star-min-opacity": "0.55", "--star-min-scale": "0.75" } as React.CSSProperties}
         viewBox="0 0 100 100"
         fill="currentColor"
         aria-hidden="true"

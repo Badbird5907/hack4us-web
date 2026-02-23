@@ -133,6 +133,43 @@
   background: #cd2d2d;
 }
 
+/* Star glow animations */
+@keyframes star-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px currentColor) drop-shadow(0 0 6px currentColor);
+    opacity: var(--star-min-opacity, 0.6);
+    transform: scale(var(--star-min-scale, 0.85));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 16px currentColor) drop-shadow(0 0 24px currentColor);
+    opacity: var(--star-max-opacity, 1);
+    transform: scale(1);
+  }
+}
+
+@keyframes star-glow-primary {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px #cd2d2d) drop-shadow(0 0 8px #cd2d2d);
+    opacity: var(--star-min-opacity, 0.7);
+    transform: scale(var(--star-min-scale, 0.9));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px #cd2d2d) drop-shadow(0 0 20px #cd2d2d) drop-shadow(0 0 32px #cd2d2d);
+    opacity: var(--star-max-opacity, 1);
+    transform: scale(1);
+  }
+}
+
+.star-glow {
+  animation: star-glow var(--star-duration, 3s) ease-in-out infinite;
+  animation-delay: var(--star-delay, 0s);
+}
+
+.star-glow-primary {
+  animation: star-glow-primary var(--star-duration, 3s) ease-in-out infinite;
+  animation-delay: var(--star-delay, 0s);
+}
+
 /* Selection color */
 ::selection {
   background: #cd2d2d;
