@@ -14,7 +14,32 @@ export function InteractiveGrid({
   const timeRef = useRef(0);
   const isHoveringRef = useRef(false);
 
+  // Cached corner gradients — recreated only on resize
+  const gradientTRRef = useRef<CanvasGradient | null>(null);
+  const gradientBLRef = useRef<CanvasGradient | null>(null);
+
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+  const buildCornerGradients = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
+      const r = Math.max(w, h) * 0.75;
+
+      const tr = ctx.createRadialGradient(w, 0, 0, w, 0, r);
+      tr.addColorStop(0, "rgba(205, 45, 45, 0.12)");
+      tr.addColorStop(0.35, "rgba(205, 45, 45, 0.05)");
+      tr.addColorStop(0.65, "rgba(205, 45, 45, 0.015)");
+      tr.addColorStop(1, "rgba(205, 45, 45, 0)");
+      gradientTRRef.current = tr;
+
+      const bl = ctx.createRadialGradient(0, h, 0, 0, h, r);
+      bl.addColorStop(0, "rgba(205, 45, 45, 0.12)");
+      bl.addColorStop(0.35, "rgba(205, 45, 45, 0.05)");
+      bl.addColorStop(0.65, "rgba(205, 45, 45, 0.015)");
+      bl.addColorStop(1, "rgba(205, 45, 45, 0)");
+      gradientBLRef.current = bl;
+    },
+    [],
+  );
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -26,17 +51,16 @@ export function InteractiveGrid({
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
 
-    const easeSpeed = 0.08;
     if (isHoveringRef.current) {
       smoothMouseRef.current.x = lerp(
         smoothMouseRef.current.x,
         rawMouseRef.current.x,
-        easeSpeed,
+        0.08,
       );
       smoothMouseRef.current.y = lerp(
         smoothMouseRef.current.y,
         rawMouseRef.current.y,
-        easeSpeed,
+        0.08,
       );
     } else {
       smoothMouseRef.current.x = lerp(smoothMouseRef.current.x, -1000, 0.03);
@@ -44,6 +68,7 @@ export function InteractiveGrid({
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
     ctx.scale(dpr, dpr);
 
     const spacing = 60;
@@ -54,91 +79,107 @@ export function InteractiveGrid({
     const hoverRadius = 220;
     timeRef.current += 0.008;
 
+    // Single global pulse — avoids per-segment alpha variation that forced
+    // individual stroke calls in the original code.
+    const baseAlpha = 0.1 + Math.sin(timeRef.current) * 0.04;
+
+    // --- Batch pass: draw the entire base grid in two path calls ---
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(205, 45, 45, ${baseAlpha})`;
+    ctx.lineWidth = 1;
     for (let i = 0; i <= cols; i++) {
-      const x = i * spacing;
-      for (let seg = 0; seg < rows; seg++) {
-        const y1 = seg * spacing;
-        const y2 = (seg + 1) * spacing;
-        const midY = (y1 + y2) / 2;
-        const dist = Math.sqrt((x - mx) ** 2 + (midY - my) ** 2);
-        const proximity = Math.max(0, 1 - dist / hoverRadius);
-        const pulse = 0.1 + Math.sin(timeRef.current + i * 0.3) * 0.04;
-        const alpha = pulse + proximity * 0.6;
-
-        ctx.beginPath();
-        ctx.moveTo(x, y1);
-        ctx.lineTo(x, y2);
-        ctx.strokeStyle = `rgba(205, 45, 45, ${alpha})`;
-        ctx.lineWidth = proximity > 0.1 ? 1 + proximity * 2 : 1;
-        ctx.stroke();
-      }
+      ctx.moveTo(i * spacing, 0);
+      ctx.lineTo(i * spacing, h);
     }
+    ctx.stroke();
 
+    ctx.beginPath();
     for (let j = 0; j <= rows; j++) {
-      const y = j * spacing;
-      for (let seg = 0; seg < cols; seg++) {
-        const x1 = seg * spacing;
-        const x2 = (seg + 1) * spacing;
-        const midX = (x1 + x2) / 2;
-        const dist = Math.sqrt((midX - mx) ** 2 + (y - my) ** 2);
-        const proximity = Math.max(0, 1 - dist / hoverRadius);
-        const pulse = 0.1 + Math.sin(timeRef.current + j * 0.3) * 0.04;
-        const alpha = pulse + proximity * 0.6;
-
-        ctx.beginPath();
-        ctx.moveTo(x1, y);
-        ctx.lineTo(x2, y);
-        ctx.strokeStyle = `rgba(205, 45, 45, ${alpha})`;
-        ctx.lineWidth = proximity > 0.1 ? 1 + proximity * 2 : 1;
-        ctx.stroke();
-      }
+      ctx.moveTo(0, j * spacing);
+      ctx.lineTo(w, j * spacing);
     }
+    ctx.stroke();
 
-    for (let i = 0; i <= cols; i++) {
-      for (let j = 0; j <= rows; j++) {
+    // --- Proximity pass: only process cells within the hover radius ---
+    const isNearCursor = mx > -500 && my > -500;
+    if (isNearCursor) {
+      // Enhanced vertical segments
+      for (let i = 0; i <= cols; i++) {
         const x = i * spacing;
-        const y = j * spacing;
-        const dist = Math.sqrt((x - mx) ** 2 + (y - my) ** 2);
-        const proximity = Math.max(0, 1 - dist / hoverRadius);
-        if (proximity > 0.05) {
+        if (Math.abs(x - mx) > hoverRadius) continue;
+        for (let seg = 0; seg < rows; seg++) {
+          const y1 = seg * spacing;
+          const y2 = (seg + 1) * spacing;
+          const midY = (y1 + y2) / 2;
+          const dist = Math.sqrt((x - mx) ** 2 + (midY - my) ** 2);
+          const proximity = Math.max(0, 1 - dist / hoverRadius);
+          if (proximity <= 0) continue;
           ctx.beginPath();
-          ctx.arc(x, y, 1.5 + proximity * 3.5, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(205, 45, 45, ${proximity * 0.9})`;
-          ctx.fill();
+          ctx.moveTo(x, y1);
+          ctx.lineTo(x, y2);
+          ctx.strokeStyle = `rgba(205, 45, 45, ${baseAlpha + proximity * 0.6})`;
+          ctx.lineWidth = 1 + proximity * 2;
+          ctx.stroke();
         }
       }
-    }
 
-    // Static top-right corner illumination
-    const cornerRadius = Math.max(w, h) * 0.75;
-    const cornerGradient = ctx.createRadialGradient(w, 0, 0, w, 0, cornerRadius);
-    cornerGradient.addColorStop(0, "rgba(205, 45, 45, 0.12)");
-    cornerGradient.addColorStop(0.35, "rgba(205, 45, 45, 0.05)");
-    cornerGradient.addColorStop(0.65, "rgba(205, 45, 45, 0.015)");
-    cornerGradient.addColorStop(1, "rgba(205, 45, 45, 0)");
-    ctx.fillStyle = cornerGradient;
-    ctx.fillRect(0, 0, w, h);
+      // Enhanced horizontal segments
+      for (let j = 0; j <= rows; j++) {
+        const y = j * spacing;
+        if (Math.abs(y - my) > hoverRadius) continue;
+        for (let seg = 0; seg < cols; seg++) {
+          const x1 = seg * spacing;
+          const x2 = (seg + 1) * spacing;
+          const midX = (x1 + x2) / 2;
+          const dist = Math.sqrt((midX - mx) ** 2 + (y - my) ** 2);
+          const proximity = Math.max(0, 1 - dist / hoverRadius);
+          if (proximity <= 0) continue;
+          ctx.beginPath();
+          ctx.moveTo(x1, y);
+          ctx.lineTo(x2, y);
+          ctx.strokeStyle = `rgba(205, 45, 45, ${baseAlpha + proximity * 0.6})`;
+          ctx.lineWidth = 1 + proximity * 2;
+          ctx.stroke();
+        }
+      }
 
-    // Static bottom-left corner illumination
-    const blGradient = ctx.createRadialGradient(0, h, 0, 0, h, cornerRadius);
-    blGradient.addColorStop(0, "rgba(205, 45, 45, 0.12)");
-    blGradient.addColorStop(0.35, "rgba(205, 45, 45, 0.05)");
-    blGradient.addColorStop(0.65, "rgba(205, 45, 45, 0.015)");
-    blGradient.addColorStop(1, "rgba(205, 45, 45, 0)");
-    ctx.fillStyle = blGradient;
-    ctx.fillRect(0, 0, w, h);
+      // Intersection dots
+      for (let i = 0; i <= cols; i++) {
+        const x = i * spacing;
+        if (Math.abs(x - mx) > hoverRadius) continue;
+        for (let j = 0; j <= rows; j++) {
+          const y = j * spacing;
+          const dist = Math.sqrt((x - mx) ** 2 + (y - my) ** 2);
+          const proximity = Math.max(0, 1 - dist / hoverRadius);
+          if (proximity > 0.05) {
+            ctx.beginPath();
+            ctx.arc(x, y, 1.5 + proximity * 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(205, 45, 45, ${proximity * 0.9})`;
+            ctx.fill();
+          }
+        }
+      }
 
-    if (mx > -500 && my > -500) {
-      const gradient = ctx.createRadialGradient(mx, my, 0, mx, my, hoverRadius);
-      gradient.addColorStop(0, "rgba(205, 45, 45, 0.15)");
-      gradient.addColorStop(0.4, "rgba(205, 45, 45, 0.06)");
-      gradient.addColorStop(1, "rgba(205, 45, 45, 0)");
-      ctx.fillStyle = gradient;
+      // Hover glow
+      const hoverGrad = ctx.createRadialGradient(mx, my, 0, mx, my, hoverRadius);
+      hoverGrad.addColorStop(0, "rgba(205, 45, 45, 0.15)");
+      hoverGrad.addColorStop(0.4, "rgba(205, 45, 45, 0.06)");
+      hoverGrad.addColorStop(1, "rgba(205, 45, 45, 0)");
+      ctx.fillStyle = hoverGrad;
       ctx.fillRect(0, 0, w, h);
     }
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // eslint-disable-next-line react-hooks/immutability
+    // Corner illumination — cached gradients, no allocation per frame
+    if (gradientTRRef.current) {
+      ctx.fillStyle = gradientTRRef.current;
+      ctx.fillRect(0, 0, w, h);
+    }
+    if (gradientBLRef.current) {
+      ctx.fillStyle = gradientBLRef.current;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    ctx.restore();
     animationRef.current = requestAnimationFrame(draw);
   }, []);
 
@@ -147,10 +188,15 @@ export function InteractiveGrid({
     const section = sectionRef.current;
     if (!canvas || !section) return;
 
+    const ctx = canvas.getContext("2d");
+
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = canvas.offsetWidth * dpr;
       canvas.height = canvas.offsetHeight * dpr;
+      if (ctx) {
+        buildCornerGradients(ctx, canvas.offsetWidth, canvas.offsetHeight);
+      }
     };
 
     const handleMouse = (e: MouseEvent) => {
@@ -178,7 +224,7 @@ export function InteractiveGrid({
       section.removeEventListener("mouseleave", handleLeave);
       cancelAnimationFrame(animationRef.current);
     };
-  }, [draw, sectionRef]);
+  }, [draw, sectionRef, buildCornerGradients]);
 
   return (
     <canvas
