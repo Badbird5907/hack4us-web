@@ -169,7 +169,7 @@ main > * {
   }
 }
 
-.star-glow {
+/* .star-glow {
   animation: star-glow var(--star-duration, 3s) ease-in-out infinite;
   animation-delay: var(--star-delay, 0s);
 }
@@ -177,7 +177,7 @@ main > * {
 .star-glow-primary {
   animation: star-glow-primary var(--star-duration, 3s) ease-in-out infinite;
   animation-delay: var(--star-delay, 0s);
-}
+} */
 
 /* Selection color */
 ::selection {

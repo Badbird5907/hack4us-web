@@ -3,8 +3,12 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import { InteractiveGrid } from "@/components/bg-grid";
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const STAR_PATH = "M50 0 L56 44 L100 50 L56 56 L50 100 L44 56 L0 50 L44 44 Z";
 const ELONGATED_STAR_PATH =
@@ -51,29 +55,110 @@ function StarIcon({
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triangleSvgRef = useRef<SVGSVGElement>(null);
+  const starsSlowRef = useRef<HTMLDivElement>(null);
+  const starsMediumRef = useRef<HTMLDivElement>(null);
+  const starsFastRef = useRef<HTMLDivElement>(null);
+  const heroContentRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
+  useGSAP(
+    () => {
+      const section = sectionRef.current;
+      if (!section) return;
 
-  const starsSlowY = useTransform(scrollYProgress, [0, 1], [0, -30]);
-  const starsMediumY = useTransform(scrollYProgress, [0, 1], [0, -70]);
-  const starsFastY = useTransform(scrollYProgress, [0, 1], [0, -120]);
+      const scrubConfig = { scrub: 0.5 };
 
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
-  const heroY = useTransform(scrollYProgress, [0, 0.35], [0, -100]);
+      // Triangle SVG overlay — fades out over first 35% of scroll
+      if (triangleSvgRef.current) {
+        gsap.to(triangleSvgRef.current, {
+          opacity: 0,
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "35% top",
+            ...scrubConfig,
+          },
+        });
+      }
 
-  const statsY = useTransform(scrollYProgress, [0, 0.5], [0, -350]);
+      // Star Layer 1 — slow drift (y: 0 → -30, full scroll)
+      if (starsSlowRef.current) {
+        gsap.to(starsSlowRef.current, {
+          y: -30,
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            ...scrubConfig,
+          },
+        });
+      }
+
+      // Star Layer 2 — medium drift (y: 0 → -70, full scroll)
+      if (starsMediumRef.current) {
+        gsap.to(starsMediumRef.current, {
+          y: -70,
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            ...scrubConfig,
+          },
+        });
+      }
+
+      // Star Layer 3 — fast drift (y: 0 → -120, full scroll)
+      if (starsFastRef.current) {
+        gsap.to(starsFastRef.current, {
+          y: -120,
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            ...scrubConfig,
+          },
+        });
+      }
+
+      // Hero content — opacity 1→0 and y 0→-100, over first 35% of scroll
+      if (heroContentRef.current) {
+        gsap.to(heroContentRef.current, {
+          opacity: 0,
+          y: -100,
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "35% top",
+            ...scrubConfig,
+          },
+        });
+      }
+
+      // Stats bar — y 0→-350, over first 50% of scroll
+      if (statsRef.current) {
+        gsap.to(statsRef.current, {
+          y: -350,
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "50% top",
+            ...scrubConfig,
+          },
+        });
+      }
+    },
+    { scope: sectionRef }
+  );
 
   return (
     <section
       ref={sectionRef}
       className="relative min-h-[200vh] bg-background"
     >
-      <motion.svg
+      <svg
+        ref={triangleSvgRef}
         className="absolute top-px left-px hidden lg:block h-[300px] w-[300px] text-primary/50 z-10 pointer-events-none"
-        style={{ opacity: heroOpacity }}
         viewBox="0 0 100 100"
         fill="none"
         overflow="visible"
@@ -87,7 +172,7 @@ export function Hero() {
         {[...Array(4)].map((_, i) => (
           <line key={`l-${i}`} x1="0" y1={20 * (i + 1)} x2={i % 2 === 0 ? "7" : "4"} y2={20 * (i + 1)} stroke="currentColor" strokeWidth={i % 2 === 0 ? "0.75" : "0.4"} />
         ))}
-      </motion.svg>
+      </svg>
 
       <div
         ref={containerRef}
@@ -102,33 +187,33 @@ export function Hero() {
         <div className="absolute bottom-0 left-0 h-2/3 w-1/2 bg-[radial-gradient(ellipse_at_bottom_left,rgba(205,45,45,0.09)_0%,rgba(205,45,45,0.03)_40%,transparent_70%)]" />
 
         {/* Star Layer 1 — slow drift (large, distant stars) */}
-        <motion.div className="absolute inset-0 pointer-events-none will-change-transform" style={{ y: starsSlowY }}>
+        <div ref={starsSlowRef} className="absolute inset-0 pointer-events-none will-change-transform">
           <StarIcon className="star-glow absolute top-32 right-1/4 h-32 w-32 text-white/90 lg:h-48 lg:w-48" duration="8s" delay="0s" minOpacity="0.5" minScale="0.8" />
           <StarIcon className="star-glow absolute top-20 right-1/3 h-24 w-24 text-white/75" duration="9s" delay="1.4s" minOpacity="0.4" minScale="0.82" />
-        </motion.div>
+        </div>
 
         {/* Star Layer 2 — medium drift */}
-        <motion.div className="absolute inset-0 pointer-events-none will-change-transform" style={{ y: starsMediumY }}>
+        <div ref={starsMediumRef} className="absolute inset-0 pointer-events-none will-change-transform">
           <StarIcon className="star-glow absolute top-1/4 left-1/3 h-20 w-20 text-white/80 lg:h-28 lg:w-28" duration="7s" delay="2.4s" minOpacity="0.55" minScale="0.85" />
           <StarIcon className="star-glow absolute bottom-1/3 right-1/3 h-12 w-12 text-white/85" duration="6s" delay="1.2s" minOpacity="0.5" minScale="0.75" />
           <StarIcon className="star-glow absolute top-1/3 right-1/2 h-16 w-8 text-white/80 rotate-12" duration="8s" delay="4s" minOpacity="0.45" minScale="0.8" variant="elongated" />
           <StarIcon className="star-glow absolute bottom-40 right-20 h-16 w-16 text-white/80 hidden md:block" duration="6.5s" delay="4.5s" minOpacity="0.45" minScale="0.78" />
-        </motion.div>
+        </div>
 
         {/* Star Layer 3 — fast drift (small, nearby sparkles) */}
-        <motion.div className="absolute inset-0 pointer-events-none will-change-transform" style={{ y: starsFastY }}>
+        <div ref={starsFastRef} className="absolute inset-0 pointer-events-none will-change-transform">
           <StarIcon className="star-glow absolute top-40 right-20 h-6 w-6 text-white" duration="5s" delay="0.6s" minOpacity="0.4" minScale="0.7" />
           <StarIcon className="star-glow absolute top-2/3 left-20 h-8 w-8 text-white/90" duration="7s" delay="3.5s" minOpacity="0.45" minScale="0.7" />
           <StarIcon className="star-glow absolute top-1/2 right-40 h-10 w-10 text-white/85 hidden md:block" duration="5.5s" delay="1.8s" minOpacity="0.4" minScale="0.75" />
           <StarIcon className="star-glow-primary absolute bottom-1/4 left-1/4 h-6 w-6 text-primary" duration="6s" delay="0.8s" minOpacity="0.5" minScale="0.7" />
           <StarIcon className="star-glow-primary absolute top-1/4 right-16 h-4 w-4 text-primary hidden lg:block" duration="5s" delay="3s" minOpacity="0.5" minScale="0.65" />
           <StarIcon className="star-glow-primary absolute top-1/2 left-1/4 h-10 w-10 text-primary/95" duration="7s" delay="2s" minOpacity="0.55" minScale="0.75" />
-        </motion.div>
+        </div>
 
         {/* Hero content — fades out on scroll */}
-        <motion.div
+        <div
+          ref={heroContentRef}
           className="absolute inset-0 mx-auto flex max-w-7xl flex-col justify-center px-6 pt-16 will-change-transform"
-          style={{ opacity: heroOpacity, y: heroY }}
         >
           <div className="max-w-4xl">
             <div className="mb-8 flex items-center gap-4">
@@ -166,12 +251,12 @@ export function Hero() {
               </Link>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Stats bar — scrolls from bottom toward center */}
-        <motion.div
+        <div
+          ref={statsRef}
           className="absolute bottom-0 left-0 right-0"
-          style={{ y: statsY }}
         >
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-border opacity-85 md:grid-cols-4 border border-border">
             {[
@@ -190,7 +275,7 @@ export function Hero() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
