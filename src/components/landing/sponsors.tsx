@@ -73,7 +73,7 @@ export function Sponsors() {
           <div className="mb-6 flex items-center justify-center gap-4">
             <div className="h-px w-12 bg-primary" />
             <span className="text-xs font-bold tracking-[0.3em] text-primary uppercase">
-              Backed By The Best
+              Made possible by our sponsors
             </span>
             <div className="h-px w-12 bg-primary" />
           </div>

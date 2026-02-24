@@ -1,74 +1,59 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { Github, Linkedin, ArrowLeft, ArrowRight } from "lucide-react";
+import { Github, Linkedin, ArrowLeft, ArrowRight,Globe } from "lucide-react";
 import { motion } from "motion/react";
 
 const TEAM_MEMBERS = [
   {
-    name: "Alex Chen",
-    role: "Lead Organizer",
-    initials: "AC",
-    bio: "CS senior with a passion for building communities and shipping products that matter.",
-    github: "#",
-    linkedin: "#",
+    name: "Cindy Shi",
+    role: "President",
+    initials: "CS",
+    bio: "President of Hack4Us.",
+    links: []
   },
   {
-    name: "Priya Sharma",
-    role: "Technical Director",
-    initials: "PS",
-    bio: "Full-stack engineer and open-source contributor. Loves distributed systems and mentoring.",
-    github: "#",
-    linkedin: "#",
+    name: "Evan Yu",
+    role: "Web Lead",
+    initials: "EY",
+    bio: "Math @ UofT, SWE @ ConnectAlum, Full Stack Engineer",
+    links: [
+      "https://github.com/Badbird5907",
+      "https://www.linkedin.com/in/ev-yu",
+      "https://evanyu.dev/",
+    ],
   },
   {
-    name: "Marcus Johnson",
-    role: "Design Lead",
-    initials: "MJ",
-    bio: "UI/UX designer who believes great design is invisible. Obsessed with pixel-perfect interfaces.",
-    github: "#",
-    linkedin: "#",
+    name: "Aaron Huang",
+    role: "Logistics Lead",
+    initials: "AH",
+    bio: "Nerd",
+    links: [
+      "https://github.com/runthebot",
+      "https://runthebot.me/",
+    ],
   },
   {
-    name: "Sarah Kim",
-    role: "Sponsorship Lead",
-    initials: "SK",
-    bio: "Business student bridging the gap between industry and innovation. Connects people to opportunities.",
-    github: "#",
-    linkedin: "#",
+    name: "Nolan Kotler",
+    role: "Finance Lead",
+    initials: "NK",
+    bio: "",
+    links: [],
   },
   {
-    name: "David Okafor",
-    role: "Logistics Coordinator",
-    initials: "DO",
-    bio: "Operations mastermind who keeps everything running smoothly. Turns chaos into clockwork.",
-    github: "#",
-    linkedin: "#",
+    name: "Ian Rosenthal",
+    role: "Outreach Lead",
+    initials: "IR",
+    bio: "",
+    links: [],
   },
   {
-    name: "Emma Torres",
+    name: "Silver Wu",
     role: "Marketing Lead",
-    initials: "ET",
-    bio: "Creative storyteller and brand strategist. Makes sure the world knows about HACK4US.",
-    github: "#",
-    linkedin: "#",
-  },
-  {
-    name: "Ryan Patel",
-    role: "Workshop Lead",
-    initials: "RP",
-    bio: "ML researcher and educator. Designs workshops that turn beginners into builders in hours.",
-    github: "#",
-    linkedin: "#",
-  },
-  {
-    name: "Chloe Nguyen",
-    role: "Community Manager",
-    initials: "CN",
-    bio: "People person and community builder. Creates spaces where everyone feels welcome to hack.",
-    github: "#",
-    linkedin: "#",
-  },
+    initials: "SW",
+    bio: "",
+    links: [],
+  }
 ];
 
 export function Team() {
@@ -105,6 +90,13 @@ export function Team() {
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
     });
+  };
+
+  const getIcon = (link: string) => {
+    const domain = new URL(link).hostname;
+    if (domain.includes("github")) return <Github className="h-3.5 w-3.5" />;
+    if (domain.includes("linkedin")) return <Linkedin className="h-3.5 w-3.5" />;
+    return <Globe className="h-3.5 w-3.5" />;
   };
 
   return (
@@ -170,19 +162,15 @@ export function Team() {
           {TEAM_MEMBERS.map((member) => (
             <div
               key={member.name}
-              className="group relative shrink-0 w-[280px] md:w-[320px] border border-border bg-card/30 transition-all hover:border-primary/50 hover:bg-card/60"
+              className="group relative shrink-0 w-[280px] md:w-[320px] border border-border bg-card/30 transition-all hover:border-primary/50 hover:bg-card/60 flex flex-col"
             >
               <div className="relative h-48 md:h-56 bg-secondary/50 flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 geometric-grid opacity-20" />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/80" />
-                <span className="relative text-5xl md:text-6xl font-black tracking-tight text-foreground/10 group-hover:text-primary/20 transition-colors">
+                 <span className="relative text-5xl md:text-6xl font-black tracking-tight text-foreground/10 group-hover:text-primary/20 transition-colors">
                   {member.initials}
                 </span>
-
-                <div className="absolute top-0 right-0 w-0 h-0 border-t-[24px] border-t-background border-l-[24px] border-l-transparent" />
               </div>
 
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-1">
                 <span className="text-[10px] font-semibold tracking-[0.2em] text-primary uppercase">
                   {member.role}
                 </span>
@@ -195,21 +183,18 @@ export function Team() {
                   {member.bio}
                 </p>
 
-                <div className="mt-5 flex gap-3">
-                  <a
-                    href={member.github}
-                    className="flex h-8 w-8 items-center justify-center border border-border text-muted-foreground transition-all hover:border-foreground hover:text-foreground"
-                    aria-label={`${member.name}'s GitHub`}
-                  >
-                    <Github className="h-3.5 w-3.5" />
-                  </a>
-                  <a
-                    href={member.linkedin}
-                    className="flex h-8 w-8 items-center justify-center border border-border text-muted-foreground transition-all hover:border-foreground hover:text-foreground"
-                    aria-label={`${member.name}'s LinkedIn`}
-                  >
-                    <Linkedin className="h-3.5 w-3.5" />
-                  </a>
+                <div className="mt-auto pt-5 flex gap-3"> 
+                  {member.links.map((link) => (
+                    <a
+                      key={link}
+                      href={link}
+                      target="_blank"
+                      className="flex h-8 w-8 items-center justify-center border border-border text-muted-foreground transition-all hover:border-foreground hover:text-foreground"
+                      aria-label={`${member.name}'s ${link}`}
+                    >
+                      {getIcon(link)}
+                    </a>
+                  ))}
                 </div>
               </div>
 

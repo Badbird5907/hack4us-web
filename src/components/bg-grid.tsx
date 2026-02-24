@@ -8,6 +8,7 @@ export function InteractiveGrid({
   sectionRef: React.RefObject<HTMLElement | null>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const clientMouseRef = useRef({ x: -1000, y: -1000 });
   const rawMouseRef = useRef({ x: -1000, y: -1000 });
   const smoothMouseRef = useRef({ x: -1000, y: -1000 });
   const animationRef = useRef<number>(0);
@@ -148,6 +149,7 @@ export function InteractiveGrid({
     }
 
     ctx.restore();
+    // eslint-disable-next-line react-hooks/immutability
     animationRef.current = requestAnimationFrame(draw);
   }, []);
 
@@ -162,12 +164,17 @@ export function InteractiveGrid({
       canvas.height = canvas.offsetHeight * dpr;
     };
 
-    const handleMouse = (e: MouseEvent) => {
+    const updateRawMouse = () => {
       const rect = canvas.getBoundingClientRect();
       rawMouseRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: clientMouseRef.current.x - rect.left,
+        y: clientMouseRef.current.y - rect.top,
       };
+    };
+
+    const handleMouse = (e: MouseEvent) => {
+      clientMouseRef.current = { x: e.clientX, y: e.clientY };
+      updateRawMouse();
       isHoveringRef.current = true;
     };
 
@@ -175,14 +182,22 @@ export function InteractiveGrid({
       isHoveringRef.current = false;
     };
 
+    const handleScroll = () => {
+      if (isHoveringRef.current) {
+        updateRawMouse();
+      }
+    };
+
     resize();
     window.addEventListener("resize", resize);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     section.addEventListener("mousemove", handleMouse);
     section.addEventListener("mouseleave", handleLeave);
     animationRef.current = requestAnimationFrame(draw);
 
     return () => {
       window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", handleScroll);
       section.removeEventListener("mousemove", handleMouse);
       section.removeEventListener("mouseleave", handleLeave);
       cancelAnimationFrame(animationRef.current);
