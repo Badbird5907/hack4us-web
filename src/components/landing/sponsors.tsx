@@ -1,13 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { motion } from "motion/react";
 
 interface SponsorTier {
   name: string;
@@ -39,79 +34,27 @@ const sizeClasses: Record<string, string> = {
   small: "h-16 md:h-20 w-32 md:w-40",
 };
 
-export function Sponsors() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLDivElement>(null);
-  const tiersRef = useRef<(HTMLDivElement | null)[]>([]);
-  const ctaRef = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      const section = sectionRef.current;
-      if (!section) return;
-
-      // Heading
-      if (headingRef.current) {
-        gsap.fromTo(
-          headingRef.current,
-          { opacity: 0, y: 60 },
-          {
-            opacity: 1,
-            y: 0,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 80%",
-              end: "top 30%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
-
-      // Tier rows stagger
-      const validTiers = tiersRef.current.filter(Boolean);
-      if (validTiers.length > 0) {
-        gsap.fromTo(
-          validTiers,
-          { opacity: 0, y: 50 },
-          {
-            opacity: 1,
-            y: 0,
-            stagger: 0.15,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 60%",
-              end: "top 10%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
-
-      // CTA
-      if (ctaRef.current) {
-        gsap.fromTo(
-          ctaRef.current,
-          { opacity: 0, y: 30 },
-          {
-            opacity: 1,
-            y: 0,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 40%",
-              end: "top 5%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
     },
-    { scope: sectionRef }
-  );
+  },
+};
 
+const tierVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" as const },
+  },
+};
+
+export function Sponsors() {
   return (
     <section
-      ref={sectionRef}
       className="relative min-h-screen flex items-center"
     >
       {/* Horizontal rule accents */}
@@ -120,7 +63,13 @@ export function Sponsors() {
 
       <div className="relative z-10 mx-auto max-w-7xl w-full px-6 py-24">
         {/* Section heading */}
-        <div ref={headingRef} className="mb-16 md:mb-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-16 md:mb-20 text-center"
+        >
           <div className="mb-6 flex items-center justify-center gap-4">
             <div className="h-px w-12 bg-primary" />
             <span className="text-xs font-bold tracking-[0.3em] text-primary uppercase">
@@ -131,14 +80,20 @@ export function Sponsors() {
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-foreground">
             OUR <span className="text-primary">SPONSORS</span>
           </h2>
-        </div>
+        </motion.div>
 
         {/* Sponsor tiers */}
-        <div className="space-y-12 md:space-y-16">
-          {SPONSOR_TIERS.map((tier, i) => (
-            <div
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          className="space-y-12 md:space-y-16"
+        >
+          {SPONSOR_TIERS.map((tier) => (
+            <motion.div
               key={tier.name}
-              ref={(el) => { tiersRef.current[i] = el; }}
+              variants={tierVariants}
             >
               {/* Tier label */}
               <div className="mb-6 flex items-center gap-4 justify-center">
@@ -162,12 +117,18 @@ export function Sponsors() {
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* CTA */}
-        <div ref={ctaRef} className="mt-16 md:mt-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mt-16 md:mt-20 text-center"
+        >
           <p className="mb-6 text-sm text-muted-foreground">
             Interested in supporting the next generation of innovators?
           </p>
@@ -178,7 +139,7 @@ export function Sponsors() {
             Become a Sponsor
             <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </Link>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

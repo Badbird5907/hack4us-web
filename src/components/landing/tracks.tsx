@@ -1,12 +1,7 @@
 "use client";
 
-import { useRef } from "react";
 import { Brain, Shield, Globe, HeartPulse } from "lucide-react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { motion, type Variants } from "motion/react";
 
 const TRACKS = [
   {
@@ -35,66 +30,40 @@ const TRACKS = [
   },
 ];
 
-export function Tracks() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
-
-  useGSAP(
-    () => {
-      const section = sectionRef.current;
-      if (!section) return;
-
-      if (headingRef.current) {
-        gsap.fromTo(
-          headingRef.current,
-          { opacity: 0, y: 60 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 80%",
-              end: "top 30%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
-
-      const validCards = cardsRef.current.filter(Boolean);
-      if (validCards.length > 0) {
-        gsap.fromTo(
-          validCards,
-          { opacity: 0, y: 80 },
-          {
-            opacity: 1,
-            y: 0,
-            stagger: 0.1,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 60%",
-              end: "top 10%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.1,
     },
-    { scope: sectionRef }
-  );
+  },
+};
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 80 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" as const },
+  },
+};
+
+export function Tracks() {
   return (
     <section
-      ref={sectionRef}
       className="relative min-h-screen flex items-center"
     >
       <div className="absolute top-8 left-8 right-8 h-px bg-border/50 hidden lg:block" />
       <div className="absolute bottom-8 left-8 right-8 h-px bg-border/50 hidden lg:block" />
 
       <div className="relative z-10 mx-auto max-w-7xl w-full px-6 py-24">
-        <div ref={headingRef} className="mb-16 md:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-16 md:mb-20"
+        >
           <div className="mb-6 flex items-center gap-4">
             <div className="h-px w-12 bg-primary" />
             <span className="text-xs font-bold tracking-[0.3em] text-primary uppercase">
@@ -106,15 +75,21 @@ export function Tracks() {
             <br />
             <span className="text-primary">TRACK</span>
           </h2>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border"
+        >
           {TRACKS.map((track, i) => {
             const Icon = track.icon;
             return (
-              <div
+              <motion.div
                 key={track.name}
-                ref={(el) => { cardsRef.current[i] = el; }}
+                variants={cardVariants}
                 className="group relative bg-background p-8 transition-colors hover:bg-card"
               >
                 <span className="absolute top-4 right-4 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground/40 uppercase">
@@ -133,10 +108,10 @@ export function Tracks() {
                 </p>
 
                 <div className="absolute bottom-0 left-0 h-px w-0 bg-primary transition-all duration-500 group-hover:w-full" />
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

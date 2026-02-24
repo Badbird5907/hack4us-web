@@ -1,14 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
+import { motion, useScroll, useTransform, useSpring } from "motion/react";
 import { InteractiveGrid } from "@/components/bg-grid";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const STAR_PATH = "M50 0 L56 44 L100 50 L56 56 L50 100 L44 56 L0 50 L44 44 Z";
 const ELONGATED_STAR_PATH =
@@ -52,107 +48,37 @@ function StarIcon({
   );
 }
 
+const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
+
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const triangleSvgRef = useRef<SVGSVGElement>(null);
-  const starsSlowRef = useRef<HTMLDivElement>(null);
-  const starsMediumRef = useRef<HTMLDivElement>(null);
-  const starsFastRef = useRef<HTMLDivElement>(null);
-  const heroContentRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
 
-  useGSAP(
-    () => {
-      const section = sectionRef.current;
-      if (!section) return;
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"],
+  });
 
-      const scrubConfig = { scrub: 0.5 };
+  // parallax stars
+  const starsSlowY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -60]), springConfig);
+  const starsMediumY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -70]), springConfig);
+  const starsFastY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -120]), springConfig);
 
-      if (triangleSvgRef.current) {
-        gsap.to(triangleSvgRef.current, {
-          opacity: 0,
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: "35% top",
-            ...scrubConfig,
-          },
-        });
-      }
+  // fade the hero stuff on scroll
+  const heroContentOpacity = useSpring(useTransform(scrollYProgress, [0, 0.35], [1, 0]), springConfig);
+  const heroContentY = useSpring(useTransform(scrollYProgress, [0, 0.35], [0, -100]), springConfig);
 
-      if (starsSlowRef.current) {
-        gsap.to(starsSlowRef.current, {
-          y: -30,
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: "bottom bottom",
-            ...scrubConfig,
-          },
-        });
-      }
-
-      if (starsMediumRef.current) {
-        gsap.to(starsMediumRef.current, {
-          y: -70,
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: "bottom bottom",
-            ...scrubConfig,
-          },
-        });
-      }
-
-      if (starsFastRef.current) {
-        gsap.to(starsFastRef.current, {
-          y: -120,
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: "bottom bottom",
-            ...scrubConfig,
-          },
-        });
-      }
-
-      if (heroContentRef.current) {
-        gsap.to(heroContentRef.current, {
-          opacity: 0,
-          y: -100,
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: "35% top",
-            ...scrubConfig,
-          },
-        });
-      }
-
-      if (statsRef.current) {
-        gsap.to(statsRef.current, {
-          y: -350,
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            end: "50% top",
-            ...scrubConfig,
-          },
-        });
-      }
-    },
-    { scope: sectionRef }
-  );
+  // slide the stats bar up on scroll
+  const statsY = useSpring(useTransform(scrollYProgress, [0, 0.5], [0, -350]), springConfig);
 
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[200vh]"
+      className="relative min-h-[180vh]"
     >
       {/* ruler */}
-      {/* <svg
-        ref={triangleSvgRef}
+      {/* <motion.svg
+        style={{ opacity: triangleOpacity }}
         className="absolute top-px left-px hidden lg:block h-[300px] w-[300px] text-primary/50 z-10 pointer-events-none"
         viewBox="0 0 100 100"
         fill="none"
@@ -167,7 +93,7 @@ export function Hero() {
         {[...Array(4)].map((_, i) => (
           <line key={`l-${i}`} x1="0" y1={20 * (i + 1)} x2={i % 2 === 0 ? "7" : "4"} y2={20 * (i + 1)} stroke="currentColor" strokeWidth={i % 2 === 0 ? "0.75" : "0.4"} />
         ))}
-      </svg> */}
+      </motion.svg> */}
 
       <div
         ref={containerRef}
@@ -178,29 +104,29 @@ export function Hero() {
         {/* <div className="absolute -right-27.5 top-1/4 translate-y-10.5 h-[600px] w-[600px] rotate-45 border border-primary/25" />
         <div className="absolute -left-28.5 bottom-1/4 h-[400px] w-[400px] rotate-12 border border-primary/15" /> */}
 
-        <div ref={starsSlowRef} className="absolute inset-0 pointer-events-none will-change-transform">
+        <motion.div style={{ y: starsSlowY }} className="absolute inset-0 pointer-events-none will-change-transform">
           <StarIcon className="star-glow absolute top-32 right-1/4 h-32 w-32 text-white/90 lg:h-48 lg:w-48" duration="8s" delay="0s" minOpacity="0.5" minScale="0.8" />
           <StarIcon className="star-glow absolute top-20 right-1/3 h-24 w-24 text-white/75" duration="9s" delay="1.4s" minOpacity="0.4" minScale="0.82" />
-        </div>
+        </motion.div>
 
-        <div ref={starsMediumRef} className="absolute inset-0 pointer-events-none will-change-transform">
+        <motion.div style={{ y: starsMediumY }} className="absolute inset-0 pointer-events-none will-change-transform">
           <StarIcon className="star-glow absolute top-1/4 left-1/3 h-20 w-20 text-white/80 lg:h-28 lg:w-28" duration="7s" delay="2.4s" minOpacity="0.55" minScale="0.85" />
           <StarIcon className="star-glow absolute bottom-1/3 right-1/3 h-12 w-12 text-white/85" duration="6s" delay="1.2s" minOpacity="0.5" minScale="0.75" />
           <StarIcon className="star-glow absolute top-1/3 right-1/2 h-16 w-8 text-white/80 rotate-12" duration="8s" delay="4s" minOpacity="0.45" minScale="0.8" variant="elongated" />
           <StarIcon className="star-glow absolute bottom-40 right-20 h-16 w-16 text-white/80 hidden md:block" duration="6.5s" delay="4.5s" minOpacity="0.45" minScale="0.78" />
-        </div>
+        </motion.div>
 
-        <div ref={starsFastRef} className="absolute inset-0 pointer-events-none will-change-transform">
+        <motion.div style={{ y: starsFastY }} className="absolute inset-0 pointer-events-none will-change-transform">
           <StarIcon className="star-glow absolute top-40 right-20 h-6 w-6 text-white" duration="5s" delay="0.6s" minOpacity="0.4" minScale="0.7" />
           <StarIcon className="star-glow absolute top-2/3 left-20 h-8 w-8 text-white/90" duration="7s" delay="3.5s" minOpacity="0.45" minScale="0.7" />
           <StarIcon className="star-glow absolute top-1/2 right-40 h-10 w-10 text-white/85 hidden md:block" duration="5.5s" delay="1.8s" minOpacity="0.4" minScale="0.75" />
           <StarIcon className="star-glow-primary absolute bottom-1/4 left-1/4 h-6 w-6 text-primary" duration="6s" delay="0.8s" minOpacity="0.5" minScale="0.7" />
           <StarIcon className="star-glow-primary absolute top-1/4 right-16 h-4 w-4 text-primary hidden lg:block" duration="5s" delay="3s" minOpacity="0.5" minScale="0.65" />
           <StarIcon className="star-glow-primary absolute top-1/2 left-1/4 h-10 w-10 text-primary/95" duration="7s" delay="2s" minOpacity="0.55" minScale="0.75" />
-        </div>
+        </motion.div>
 
-        <div
-          ref={heroContentRef}
+        <motion.div
+          style={{ opacity: heroContentOpacity, y: heroContentY }}
           className="absolute inset-0 mx-auto flex max-w-7xl flex-col justify-center px-6 pt-16 will-change-transform"
         >
           <div className="max-w-4xl">
@@ -239,10 +165,10 @@ export function Hero() {
               </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <div
-          ref={statsRef}
+        <motion.div
+          style={{ y: statsY }}
           className="absolute bottom-0 left-0 right-0"
         >
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-border opacity-85 md:grid-cols-4 border border-border">
@@ -262,7 +188,7 @@ export function Hero() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

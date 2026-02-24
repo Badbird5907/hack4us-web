@@ -2,11 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { Github, Linkedin, ArrowLeft, ArrowRight } from "lucide-react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { motion } from "motion/react";
 
 const TEAM_MEMBERS = [
   {
@@ -76,36 +72,9 @@ const TEAM_MEMBERS = [
 ];
 
 export function Team() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-
-  useGSAP(
-    () => {
-      const section = sectionRef.current;
-      if (!section) return;
-
-      if (headingRef.current) {
-        gsap.fromTo(
-          headingRef.current,
-          { opacity: 0, y: 60 },
-          {
-            opacity: 1,
-            y: 0,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 80%",
-              end: "top 30%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
-    },
-    { scope: sectionRef }
-  );
 
   const updateScrollState = () => {
     const el = scrollContainerRef.current;
@@ -140,14 +109,19 @@ export function Team() {
 
   return (
     <section
-      ref={sectionRef}
       className="relative min-h-screen flex items-center"
     >
       <div className="absolute bottom-12 right-16 h-36 w-36 rotate-45 border border-primary/10 hidden lg:block" />
       <div className="absolute top-20 left-12 h-20 w-20 -rotate-12 border border-border/20 hidden lg:block" />
 
       <div className="relative z-10 w-full py-24">
-        <div ref={headingRef} className="mx-auto max-w-7xl px-6 mb-16 md:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mx-auto max-w-7xl px-6 mb-16 md:mb-20"
+        >
           <div className="flex items-end justify-between">
             <div>
               <div className="mb-6 flex items-center gap-4">
@@ -180,7 +154,7 @@ export function Team() {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <div
           ref={scrollContainerRef}

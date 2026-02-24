@@ -1,12 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { AnimatePresence,
+motion } from "motion/react";
 
 const FAQ_ITEMS = [
   {
@@ -40,8 +37,6 @@ function FaqItem({
   isOpen: boolean;
   onToggle: () => void;
 }) {
-  const answerRef = useRef<HTMLDivElement>(null);
-
   return (
     <div className="border-b border-border">
       <button
@@ -61,74 +56,30 @@ function FaqItem({
           }`}
         />
       </button>
-      <div
-        ref={answerRef}
-        className="overflow-hidden transition-all duration-300"
-        style={{
-          // eslint-disable-next-line react-hooks/refs
-          maxHeight: isOpen ? `${answerRef.current?.scrollHeight ?? 200}px` : "0px",
-          opacity: isOpen ? 1 : 0,
-        }}
-      >
-        <p className="pb-6 text-sm md:text-base leading-relaxed text-muted-foreground">
-          {item.answer}
-        </p>
-      </div>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <p className="pb-6 text-sm md:text-base leading-relaxed text-muted-foreground">
+              {item.answer}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 export function Faq() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  useGSAP(
-    () => {
-      const section = sectionRef.current;
-      if (!section) return;
-
-      if (headingRef.current) {
-        gsap.fromTo(
-          headingRef.current,
-          { opacity: 0, y: 60 },
-          {
-            opacity: 1,
-            y: 0,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 80%",
-              end: "top 30%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
-
-      if (listRef.current) {
-        gsap.fromTo(
-          listRef.current,
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1,
-            y: 0,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 60%",
-              end: "top 20%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
-    },
-    { scope: sectionRef }
-  );
 
   return (
     <section
-      ref={sectionRef}
       className="relative min-h-screen flex items-center"
     >
       <div className="absolute top-16 right-12 h-40 w-40 rotate-45 border border-primary/10 hidden lg:block" />
@@ -140,7 +91,13 @@ export function Faq() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-3xl w-full px-6 py-24">
-        <div ref={headingRef} className="mb-16 md:mb-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-16 md:mb-20 text-center"
+        >
           <div className="mb-6 flex items-center justify-center gap-4">
             <div className="h-px w-12 bg-primary" />
             <span className="text-xs font-bold tracking-[0.3em] text-primary uppercase">
@@ -151,9 +108,15 @@ export function Faq() {
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-foreground">
             F<span className="text-primary">A</span>Q
           </h2>
-        </div>
+        </motion.div>
 
-        <div ref={listRef} className="border-t border-border">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
+          className="border-t border-border"
+        >
           {FAQ_ITEMS.map((item, i) => (
             <FaqItem
               key={i}
@@ -162,7 +125,7 @@ export function Faq() {
               onToggle={() => setOpenIndex(openIndex === i ? null : i)}
             />
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

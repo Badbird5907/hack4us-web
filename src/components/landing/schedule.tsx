@@ -1,12 +1,7 @@
 "use client";
 
-import { useRef } from "react";
 import { Clock } from "lucide-react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { motion } from "motion/react";
 
 const PLACEHOLDER_EVENTS = [
   { time: "09:00", title: "Check-in & Breakfast", type: "logistics" },
@@ -26,55 +21,8 @@ const typeColors: Record<string, string> = {
 };
 
 export function Schedule() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      const section = sectionRef.current;
-      if (!section) return;
-
-      if (headingRef.current) {
-        gsap.fromTo(
-          headingRef.current,
-          { opacity: 0, y: 60 },
-          {
-            opacity: 1,
-            y: 0,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 80%",
-              end: "top 30%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
-
-      if (contentRef.current) {
-        gsap.fromTo(
-          contentRef.current,
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1,
-            y: 0,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 60%",
-              end: "top 20%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
-    },
-    { scope: sectionRef }
-  );
-
   return (
     <section
-      ref={sectionRef}
       className="relative min-h-screen flex items-center"
     >
       {/* Geometric accents */}
@@ -83,7 +31,13 @@ export function Schedule() {
 
       <div className="relative z-10 mx-auto max-w-7xl w-full px-6 py-24">
         {/* Section heading */}
-        <div ref={headingRef} className="mb-16 md:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 60 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-16 md:mb-20"
+        >
           <div className="mb-6 flex items-center gap-4">
             <div className="h-px w-12 bg-primary" />
             <span className="text-xs font-bold tracking-[0.3em] text-primary uppercase">
@@ -93,10 +47,15 @@ export function Schedule() {
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-foreground">
             EVENT <span className="text-primary">SCHEDULE</span>
           </h2>
-        </div>
+        </motion.div>
 
         {/* Placeholder schedule content */}
-        <div ref={contentRef}>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
+        >
           {/* Day tabs (dummy) */}
           <div className="mb-10 flex gap-px">
             <button className="bg-primary px-6 py-3 text-xs font-bold tracking-widest text-primary-foreground uppercase">
@@ -156,7 +115,7 @@ export function Schedule() {
               be announced shortly.
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

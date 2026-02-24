@@ -1,11 +1,6 @@
 "use client";
 
-import { useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { motion, useScroll, useTransform, useSpring } from "motion/react";
 
 const STAR_PATH = "M50 0 L56 44 L100 50 L56 56 L50 100 L44 56 L0 50 L44 44 Z";
 const ELONGATED_STAR_PATH =
@@ -49,49 +44,23 @@ function Star({
   );
 }
 
+const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
+
 /**
  * Full-page background layer: sparse stars + subtle gradient washes.
  * Rendered behind all page sections as a fixed/absolute underlay.
  */
 export function PageBackground() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const layerSlowRef = useRef<HTMLDivElement>(null);
-  const layerMedRef = useRef<HTMLDivElement>(null);
-  const layerFastRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll();
 
-  useGSAP(() => {
-    const scrub = { scrub: 0.6 };
-    const shared = {
-      trigger: document.documentElement,
-      start: "top top",
-      end: "bottom bottom",
-      ...scrub,
-    };
-
-    if (layerSlowRef.current) {
-      gsap.to(layerSlowRef.current, {
-        y: -15,
-        scrollTrigger: shared,
-      });
-    }
-    if (layerMedRef.current) {
-      gsap.to(layerMedRef.current, {
-        y: -35,
-        scrollTrigger: shared,
-      });
-    }
-    if (layerFastRef.current) {
-      gsap.to(layerFastRef.current, {
-        y: -60,
-        scrollTrigger: shared,
-      });
-    }
-  }, { scope: wrapperRef });
+  const slowY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -15]), springConfig);
+  const medY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -35]), springConfig);
+  const fastY = useSpring(useTransform(scrollYProgress, [0, 1], [0, -60]), springConfig);
 
   return (
-    <div ref={wrapperRef} className="fixed inset-0 pointer-events-none" aria-hidden="true">
+    <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
       {/* Layer 1 — slow parallax (large / distant stars) */}
-      <div ref={layerSlowRef} className="absolute inset-0 will-change-transform">
+      <motion.div style={{ y: slowY }} className="absolute inset-0 will-change-transform">
         <Star
           className="star-glow absolute top-[15%] right-[12%] h-6 w-6 text-white/60"
           duration="9s" delay="1s" minOpacity="0.3" minScale="0.75"
@@ -108,10 +77,10 @@ export function PageBackground() {
           className="star-glow absolute top-[88%] right-[15%] h-5 w-5 text-white/55"
           duration="9s" delay="0.3s" minOpacity="0.3" minScale="0.75"
         />
-      </div>
+      </motion.div>
 
       {/* Layer 2 — medium parallax */}
-      <div ref={layerMedRef} className="absolute inset-0 will-change-transform">
+      <motion.div style={{ y: medY }} className="absolute inset-0 will-change-transform">
         <Star
           className="star-glow absolute top-[22%] left-[8%] h-4 w-4 text-white/50"
           duration="8s" delay="3.2s" minOpacity="0.25" minScale="0.7"
@@ -128,10 +97,10 @@ export function PageBackground() {
           className="star-glow absolute top-[78%] right-[40%] h-4 w-4 text-white/50"
           duration="10s" delay="1.2s" minOpacity="0.2" minScale="0.7"
         />
-      </div>
+      </motion.div>
 
       {/* Layer 3 — fast parallax (small / nearby sparkles) */}
-      <div ref={layerFastRef} className="absolute inset-0 will-change-transform">
+      <motion.div style={{ y: fastY }} className="absolute inset-0 will-change-transform">
         <Star
           className="star-glow absolute top-[18%] left-[55%] h-3 w-3 text-white/45 hidden md:block"
           duration="7s" delay="0.5s" minOpacity="0.3" minScale="0.65"
@@ -153,7 +122,7 @@ export function PageBackground() {
           className="star-glow-primary absolute top-[92%] left-[60%] h-3 w-3 text-primary/55 hidden lg:block"
           duration="7.5s" delay="2s" minOpacity="0.3" minScale="0.7"
         />
-      </div>
+      </motion.div>
     </div>
   );
 }
