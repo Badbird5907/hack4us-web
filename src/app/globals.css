@@ -82,14 +82,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-html {
-  scroll-snap-type: y mandatory;
-}
 
-main > * {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
 
 @layer base {
   * {
@@ -169,7 +162,8 @@ main > * {
   }
 }
 
-/* .star-glow {
+/* glow is very slow
+.star-glow {
   animation: star-glow var(--star-duration, 3s) ease-in-out infinite;
   animation-delay: var(--star-delay, 0s);
 }

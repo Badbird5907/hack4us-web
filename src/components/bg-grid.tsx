@@ -13,33 +13,9 @@ export function InteractiveGrid({
   const animationRef = useRef<number>(0);
   const timeRef = useRef(0);
   const isHoveringRef = useRef(false);
-
-  // Cached corner gradients — recreated only on resize
-  const gradientTRRef = useRef<CanvasGradient | null>(null);
-  const gradientBLRef = useRef<CanvasGradient | null>(null);
+  const hoverStrengthRef = useRef(0);
 
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-  const buildCornerGradients = useCallback(
-    (ctx: CanvasRenderingContext2D, w: number, h: number) => {
-      const r = Math.max(w, h) * 0.75;
-
-      const tr = ctx.createRadialGradient(w, 0, 0, w, 0, r);
-      tr.addColorStop(0, "rgba(205, 45, 45, 0.12)");
-      tr.addColorStop(0.35, "rgba(205, 45, 45, 0.05)");
-      tr.addColorStop(0.65, "rgba(205, 45, 45, 0.015)");
-      tr.addColorStop(1, "rgba(205, 45, 45, 0)");
-      gradientTRRef.current = tr;
-
-      const bl = ctx.createRadialGradient(0, h, 0, 0, h, r);
-      bl.addColorStop(0, "rgba(205, 45, 45, 0.12)");
-      bl.addColorStop(0.35, "rgba(205, 45, 45, 0.05)");
-      bl.addColorStop(0.65, "rgba(205, 45, 45, 0.015)");
-      bl.addColorStop(1, "rgba(205, 45, 45, 0)");
-      gradientBLRef.current = bl;
-    },
-    [],
-  );
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -62,9 +38,10 @@ export function InteractiveGrid({
         rawMouseRef.current.y,
         0.08,
       );
+      hoverStrengthRef.current = lerp(hoverStrengthRef.current, 1, 0.1);
     } else {
-      smoothMouseRef.current.x = lerp(smoothMouseRef.current.x, -1000, 0.03);
-      smoothMouseRef.current.y = lerp(smoothMouseRef.current.y, -1000, 0.03);
+      const next = lerp(hoverStrengthRef.current, 0, 0.06);
+      hoverStrengthRef.current = next < 0.005 ? 0 : next;
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -101,7 +78,8 @@ export function InteractiveGrid({
     ctx.stroke();
 
     // --- Proximity pass: only process cells within the hover radius ---
-    const isNearCursor = mx > -500 && my > -500;
+    const strength = hoverStrengthRef.current;
+    const isNearCursor = strength > 0.002 && mx > -500 && my > -500;
     if (isNearCursor) {
       // Enhanced vertical segments
       for (let i = 0; i <= cols; i++) {
@@ -117,8 +95,8 @@ export function InteractiveGrid({
           ctx.beginPath();
           ctx.moveTo(x, y1);
           ctx.lineTo(x, y2);
-          ctx.strokeStyle = `rgba(205, 45, 45, ${baseAlpha + proximity * 0.6})`;
-          ctx.lineWidth = 1 + proximity * 2;
+          ctx.strokeStyle = `rgba(205, 45, 45, ${proximity * 0.6 * strength})`;
+          ctx.lineWidth = 1 + proximity * 2 * strength;
           ctx.stroke();
         }
       }
@@ -137,8 +115,8 @@ export function InteractiveGrid({
           ctx.beginPath();
           ctx.moveTo(x1, y);
           ctx.lineTo(x2, y);
-          ctx.strokeStyle = `rgba(205, 45, 45, ${baseAlpha + proximity * 0.6})`;
-          ctx.lineWidth = 1 + proximity * 2;
+          ctx.strokeStyle = `rgba(205, 45, 45, ${proximity * 0.6 * strength})`;
+          ctx.lineWidth = 1 + proximity * 2 * strength;
           ctx.stroke();
         }
       }
@@ -153,8 +131,8 @@ export function InteractiveGrid({
           const proximity = Math.max(0, 1 - dist / hoverRadius);
           if (proximity > 0.05) {
             ctx.beginPath();
-            ctx.arc(x, y, 1.5 + proximity * 3.5, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(205, 45, 45, ${proximity * 0.9})`;
+            ctx.arc(x, y, 1.5 + proximity * 3.5 * strength, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(205, 45, 45, ${proximity * 0.9 * strength})`;
             ctx.fill();
           }
         }
@@ -162,20 +140,10 @@ export function InteractiveGrid({
 
       // Hover glow
       const hoverGrad = ctx.createRadialGradient(mx, my, 0, mx, my, hoverRadius);
-      hoverGrad.addColorStop(0, "rgba(205, 45, 45, 0.15)");
-      hoverGrad.addColorStop(0.4, "rgba(205, 45, 45, 0.06)");
+      hoverGrad.addColorStop(0, `rgba(205, 45, 45, ${0.15 * strength})`);
+      hoverGrad.addColorStop(0.4, `rgba(205, 45, 45, ${0.06 * strength})`);
       hoverGrad.addColorStop(1, "rgba(205, 45, 45, 0)");
       ctx.fillStyle = hoverGrad;
-      ctx.fillRect(0, 0, w, h);
-    }
-
-    // Corner illumination — cached gradients, no allocation per frame
-    if (gradientTRRef.current) {
-      ctx.fillStyle = gradientTRRef.current;
-      ctx.fillRect(0, 0, w, h);
-    }
-    if (gradientBLRef.current) {
-      ctx.fillStyle = gradientBLRef.current;
       ctx.fillRect(0, 0, w, h);
     }
 
@@ -188,15 +156,10 @@ export function InteractiveGrid({
     const section = sectionRef.current;
     if (!canvas || !section) return;
 
-    const ctx = canvas.getContext("2d");
-
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
       canvas.width = canvas.offsetWidth * dpr;
       canvas.height = canvas.offsetHeight * dpr;
-      if (ctx) {
-        buildCornerGradients(ctx, canvas.offsetWidth, canvas.offsetHeight);
-      }
     };
 
     const handleMouse = (e: MouseEvent) => {
@@ -224,13 +187,23 @@ export function InteractiveGrid({
       section.removeEventListener("mouseleave", handleLeave);
       cancelAnimationFrame(animationRef.current);
     };
-  }, [draw, sectionRef, buildCornerGradients]);
+  }, [draw, sectionRef]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="pointer-events-none absolute inset-0 h-full w-full"
-      aria-hidden="true"
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to bottom, transparent 60%, var(--background) 100%)",
+        }}
+        aria-hidden="true"
+      />
+    </>
   );
 }
