@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useSpring } from "motion/react";
 import { InteractiveGrid } from "@/components/bg-grid";
+import { Hack4UsLogo } from "@/components/hack4us-logo";
 
 const STAR_PATH = "M50 0 L56 44 L100 50 L56 56 L50 100 L44 56 L0 50 L44 44 Z";
 const ELONGATED_STAR_PATH =
@@ -137,11 +138,7 @@ export function Hero() {
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 text-balance">
-              <span className="text-foreground">HACK</span>
-              <span className="text-primary">4</span>
-              <span className="text-foreground">US</span>
-            </h1>
+            <Hack4UsLogo className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 text-balance" />
 
             <p className="mb-12 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
               A premier 36-hour hackathon bringing students together to design
@@ -151,7 +148,7 @@ export function Hero() {
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <Link
-                href="#register"
+                href="/app/register"
                 className="group inline-flex items-center gap-3 bg-primary px-8 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase transition-all hover:bg-primary/90"
               >
                 Register Now

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
-import { SmoothScroll } from "@/components/smooth-scroll";
+import { ConvexClientProvider } from "@/components/convex-client";
+
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -9,8 +10,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "HACK4US",
-  description: "HACK4US",
+  title: "Hack4Us",
+  description: "Hack4Us",
 };
 
 export default function RootLayout({
@@ -23,7 +24,9 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} antialiased`}
       >
-        <SmoothScroll>{children}</SmoothScroll>
+        <ConvexClientProvider>
+          {children}
+        </ConvexClientProvider>
       </body>
     </html>
   );

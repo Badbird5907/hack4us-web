@@ -5,17 +5,20 @@ import { Schedule } from "@/components/landing/schedule";
 import { Faq } from "@/components/landing/faq";
 import { Team } from "@/components/landing/team";
 import { PageBackground } from "@/components/page-background";
+import { SmoothScroll } from "@/components/smooth-scroll";
 
 export default function Home() {
   return (
-    <main className="relative">
-      <PageBackground />
-      <Hero />
-      <Tracks />
-      <Sponsors />
-      <Schedule />
-      <Faq />
-      <Team />
-    </main>
+    <SmoothScroll>
+      <main className="relative">
+        <PageBackground />
+        <Hero />
+        <Tracks />
+        <Sponsors />
+        <Schedule />
+        <Faq />
+        <Team />
+      </main>
+    </SmoothScroll>
   );
 }
