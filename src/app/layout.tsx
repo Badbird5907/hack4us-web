@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { ConvexClientProvider } from "@/components/convex-client";
+import { getToken } from "@/lib/auth-server";
 
 import "./globals.css";
 
@@ -14,17 +15,19 @@ export const metadata: Metadata = {
   description: "Hack4Us",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const token = await getToken();
+
   return (
     <html lang="en">
       <body
         className={`${montserrat.variable} antialiased`}
       >
-        <ConvexClientProvider>
+        <ConvexClientProvider initialToken={token}>
           {children}
         </ConvexClientProvider>
       </body>

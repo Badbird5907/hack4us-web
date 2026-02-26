@@ -3,17 +3,26 @@ import { convex } from "@convex-dev/better-auth/plugins";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { betterAuth } from "better-auth/minimal";
+import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
+import { admin } from "better-auth/plugins";
 import authConfig from "./auth.config";
+import authSchema from "./betterAuth/schema";
 
 const siteUrl = process.env.SITE_URL!;
 
 // The component client has methods needed for integrating Convex with Better Auth,
 // as well as helper methods for general use.
-export const authComponent = createClient<DataModel>(components.betterAuth);
+export const authComponent = createClient<DataModel, typeof authSchema>(
+  components.betterAuth,
+  {
+    local: {
+      schema: authSchema,
+    },
+  }
+);
 
-export const createAuth = (ctx: GenericCtx<DataModel>) => {
-  return betterAuth({
+export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
+  return {
     baseURL: siteUrl,
     database: authComponent.adapter(ctx),
     emailAndPassword: {
@@ -33,8 +42,13 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
     plugins: [
       // The Convex plugin is required for Convex compatibility
       convex({ authConfig }),
+      admin(),
     ],
-  })
+  } satisfies BetterAuthOptions;
+};
+
+export const createAuth = (ctx: GenericCtx<DataModel>) => {
+  return betterAuth(createAuthOptions(ctx));
 }
 
 // Example function for getting the current user

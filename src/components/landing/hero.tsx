@@ -111,7 +111,7 @@ export function Hero() {
         </motion.div>
 
         <motion.div style={{ y: starsMediumY }} className="absolute inset-0 pointer-events-none will-change-transform">
-          <StarIcon className="star-glow absolute top-1/4 left-1/3 h-20 w-20 text-white/80 lg:h-28 lg:w-28" duration="7s" delay="2.4s" minOpacity="0.55" minScale="0.85" />
+          <StarIcon className="star-glow absolute top-1/6 left-1/3 h-20 w-20 text-white/80 lg:h-28 lg:w-28" duration="7s" delay="2.4s" minOpacity="0.55" minScale="0.85" />
           <StarIcon className="star-glow absolute bottom-1/3 right-1/3 h-12 w-12 text-white/85" duration="6s" delay="1.2s" minOpacity="0.5" minScale="0.75" />
           <StarIcon className="star-glow absolute top-1/3 right-1/2 h-16 w-8 text-white/80 rotate-12" duration="8s" delay="4s" minOpacity="0.45" minScale="0.8" variant="elongated" />
           <StarIcon className="star-glow absolute bottom-40 right-20 h-16 w-16 text-white/80 hidden md:block" duration="6.5s" delay="4.5s" minOpacity="0.45" minScale="0.78" />
@@ -148,7 +148,7 @@ export function Hero() {
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <Link
-                href="/app/register"
+                href="/apply"
                 className="group inline-flex items-center gap-3 bg-primary px-8 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase transition-all hover:bg-primary/90"
               >
                 Register Now

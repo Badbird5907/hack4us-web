@@ -51,7 +51,7 @@ export default function SignUpPage() {
           <p className="mb-8 text-xs text-muted-foreground tracking-wide">
             Register to participate in the hackathon.
           </p>
-
+z
           <SocialAuthButtons callbackURL={next} />
 
           <div className="flex items-center gap-3 py-4">

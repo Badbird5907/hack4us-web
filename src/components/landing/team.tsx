@@ -51,9 +51,11 @@ const TEAM_MEMBERS = [
     name: "Silver Wu",
     role: "Marketing Lead",
     initials: "SW",
-    bio: "",
-    links: [],
-  }
+    bio: "LinkedIn Warrior",
+    links: [
+      "https://www.linkedin.com/in/wusilverraccoon/"
+    ],
+  },
 ];
 
 export function Team() {
