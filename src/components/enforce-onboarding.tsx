@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@/hooks/convex";
-import { api } from "../../convex/_generated/api";
+import { api } from "@convex/_generated/api";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 

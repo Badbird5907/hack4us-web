@@ -1,3 +1,8 @@
+"use client";
+
+import { useQuery } from "@/hooks/convex";
+import { api } from "@convex/_generated/api";
+
 export default function DashboardPage() {
   return (
     <div>
