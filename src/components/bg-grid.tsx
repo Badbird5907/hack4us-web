@@ -2,10 +2,20 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
+interface Ripple {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  speed: number;
+}
+
 export function InteractiveGrid({
   sectionRef,
+  introRipple = false,
 }: {
   sectionRef: React.RefObject<HTMLElement | null>;
+  introRipple?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const clientMouseRef = useRef({ x: -1000, y: -1000 });
@@ -15,6 +25,7 @@ export function InteractiveGrid({
   const timeRef = useRef(0);
   const isHoveringRef = useRef(false);
   const hoverStrengthRef = useRef(0);
+  const ripplesRef = useRef<Ripple[]>([]);
 
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -77,6 +88,92 @@ export function InteractiveGrid({
       ctx.lineTo(w, j * spacing);
     }
     ctx.stroke();
+
+    // --- Ripple pass ---
+    const ripples = ripplesRef.current;
+    for (let r = ripples.length - 1; r >= 0; r--) {
+      const rip = ripples[r];
+      rip.radius += rip.speed;
+      const age = rip.radius / rip.maxRadius;
+      if (age >= 1) {
+        ripples.splice(r, 1);
+        continue;
+      }
+      const alpha = Math.pow(1 - age, 1.2);
+      const ringWidth = 45;
+
+      // Outer glow ring
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(205, 45, 45, ${alpha * 0.12})`;
+      ctx.lineWidth = ringWidth;
+      ctx.stroke();
+
+      // Sharp leading edge
+      ctx.beginPath();
+      ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(205, 45, 45, ${alpha * 0.5})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+
+      // Lit-up intersection dots swept by the ring
+      for (let i = 0; i <= cols; i++) {
+        const x = i * spacing;
+        for (let j = 0; j <= rows; j++) {
+          const y = j * spacing;
+          const dist = Math.sqrt((x - rip.x) ** 2 + (y - rip.y) ** 2);
+          const distFromRing = Math.abs(dist - rip.radius);
+          if (distFromRing >= ringWidth) continue;
+          const prox = 1 - distFromRing / ringWidth;
+          ctx.beginPath();
+          ctx.arc(x, y, 1.5 + prox * 4 * alpha, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(205, 45, 45, ${prox * alpha * 0.9})`;
+          ctx.fill();
+        }
+      }
+
+      // Lit-up vertical segments swept by the ring
+      for (let i = 0; i <= cols; i++) {
+        const x = i * spacing;
+        for (let seg = 0; seg < rows; seg++) {
+          const y1 = seg * spacing;
+          const y2 = (seg + 1) * spacing;
+          const midY = (y1 + y2) / 2;
+          const dist = Math.sqrt((x - rip.x) ** 2 + (midY - rip.y) ** 2);
+          const distFromRing = Math.abs(dist - rip.radius);
+          if (distFromRing >= ringWidth) continue;
+          const prox = 1 - distFromRing / ringWidth;
+          ctx.beginPath();
+          ctx.moveTo(x, y1);
+          ctx.lineTo(x, y2);
+          ctx.strokeStyle = `rgba(205, 45, 45, ${prox * alpha * 0.55})`;
+          ctx.lineWidth = 1 + prox * 2.5 * alpha;
+          ctx.stroke();
+        }
+      }
+
+      // Lit-up horizontal segments swept by the ring
+      for (let j = 0; j <= rows; j++) {
+        const y = j * spacing;
+        for (let seg = 0; seg < cols; seg++) {
+          const x1 = seg * spacing;
+          const x2 = (seg + 1) * spacing;
+          const midX = (x1 + x2) / 2;
+          const dist = Math.sqrt((midX - rip.x) ** 2 + (y - rip.y) ** 2);
+          const distFromRing = Math.abs(dist - rip.radius);
+          if (distFromRing >= ringWidth) continue;
+          const prox = 1 - distFromRing / ringWidth;
+          ctx.beginPath();
+          ctx.moveTo(x1, y);
+          ctx.lineTo(x2, y);
+          ctx.strokeStyle = `rgba(205, 45, 45, ${prox * alpha * 0.55})`;
+          ctx.lineWidth = 1 + prox * 2.5 * alpha;
+          ctx.stroke();
+        }
+      }
+    }
 
     // --- Proximity pass: only process cells within the hover radius ---
     const strength = hoverStrengthRef.current;
@@ -195,14 +292,33 @@ export function InteractiveGrid({
     section.addEventListener("mouseleave", handleLeave);
     animationRef.current = requestAnimationFrame(draw);
 
+    // let t1: ReturnType<typeof setTimeout> | undefined;
+    // let t2: ReturnType<typeof setTimeout> | undefined;
+
+    if (introRipple) {
+      const cx = canvas.offsetWidth / 2;
+      const cy = canvas.offsetHeight / 2;
+      const maxR = Math.sqrt(cx * cx + cy * cy) * 1.15;
+      const speed = 4.5;
+      ripplesRef.current.push({ x: cx, y: cy, radius: 0, maxRadius: maxR, speed });
+      // t1 = setTimeout(() => {
+      //   ripplesRef.current.push({ x: cx, y: cy, radius: 0, maxRadius: maxR, speed });
+      // }, 380);
+      // t2 = setTimeout(() => {
+      //   ripplesRef.current.push({ x: cx, y: cy, radius: 0, maxRadius: maxR, speed });
+      // }, 760);
+    }
+
     return () => {
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", handleScroll);
       section.removeEventListener("mousemove", handleMouse);
       section.removeEventListener("mouseleave", handleLeave);
       cancelAnimationFrame(animationRef.current);
+      // clearTimeout(t1);
+      // clearTimeout(t2);
     };
-  }, [draw, sectionRef]);
+  }, [draw, sectionRef, introRipple]);
 
   return (
     <>

@@ -1,13 +1,22 @@
+"use client";
+
 import type {
   ApplicationConfig,
   ApplicationSection,
   ApplicationQuestionsSchema,
-  ShortTextField,
   TextareaField,
   RadioField,
   CheckboxField,
   SelectField,
+  CustomField,
+  CustomFieldProps,
+  CustomFieldViewProps,
 } from "./schemas";
+import {
+  DietaryForm,
+  DietaryView,
+  parseDietaryValue,
+} from "./components/dietary";
 
 const sections = {
   experience: {
@@ -131,11 +140,21 @@ const questions = {
     sectionId: "logistics",
     order: 6,
     field: {
-      type: "text",
+      type: "custom",
       label: "Dietary Restrictions",
-      placeholder: "e.g. Vegetarian, Halal, Nut allergy, None",
-      maxLength: 200,
-    } satisfies ShortTextField,
+      description: "Select any that apply, or leave blank if none.",
+      component: DietaryForm as React.ComponentType<CustomFieldProps>,
+      viewComponent: DietaryView as React.ComponentType<CustomFieldViewProps>,
+      nudge: (value) => {
+        const val = parseDietaryValue(value);
+        if (val.selected.length === 0 && !val.other.trim())
+          return {
+            message: "We want everyone to enjoy the food! Don't be shy!",
+            tone: "info",
+          };
+        return null;
+      },
+    } satisfies CustomField,
   },
 
   tshirtSize: {

@@ -7,12 +7,20 @@ export const FieldOptionSchema = z.object({
   disabled: z.boolean().optional(),
 });
 
+export interface FieldNudge {
+  message: string;
+  tone: "encouraging" | "info" | "tip";
+}
+
+export type NudgeFn = (value: unknown) => FieldNudge | null;
+
 const BaseFieldSchema = z.object({
   label: z.string(),
   description: z.string().optional(),
   placeholder: z.string().optional(),
   required: z.boolean().optional(),
   disabled: z.boolean().optional(),
+  nudge: z.custom<NudgeFn>().optional(),
 });
 
 export const ShortTextFieldSchema = BaseFieldSchema.extend({
@@ -53,6 +61,7 @@ export const CheckboxFieldSchema = BaseFieldSchema.extend({
   options: z.array(FieldOptionSchema).min(1),
   minSelected: z.number().int().nonnegative().optional(),
   maxSelected: z.number().int().positive().optional(),
+  selectAll: z.boolean().optional(),
 });
 
 export const SelectFieldSchema = BaseFieldSchema.extend({
@@ -60,11 +69,6 @@ export const SelectFieldSchema = BaseFieldSchema.extend({
   options: z.array(FieldOptionSchema).min(1),
 });
 
-/**
- * Custom field: bring your own React component.
- * Zod cannot validate a React component at runtime, so `component` is typed
- * via the TypeScript interface below and passed through as `z.custom`.
- */
 export interface CustomFieldProps<TValue = unknown> {
   value: TValue;
   onChange: (value: TValue) => void;
@@ -72,9 +76,14 @@ export interface CustomFieldProps<TValue = unknown> {
   disabled?: boolean;
 }
 
+export interface CustomFieldViewProps<TValue = unknown> {
+  value: TValue;
+}
+
 export const CustomFieldSchema = BaseFieldSchema.extend({
   type: z.literal("custom"),
   component: z.custom<React.ComponentType<CustomFieldProps>>(),
+  viewComponent: z.custom<React.ComponentType<CustomFieldViewProps>>().optional(),
 });
 
 export const ApplicationFieldSchema = z.discriminatedUnion("type", [

@@ -24,6 +24,7 @@ export const updateMyProfile = mutation({
   },
   handler: async (ctx, args) => {
     const updates = Object.fromEntries(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(args).filter(([_, v]) => v !== undefined)
     );
 

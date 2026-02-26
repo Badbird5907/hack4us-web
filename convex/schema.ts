@@ -21,4 +21,14 @@ export default defineSchema({
       external: v.array(v.string()),
     })),
   }).index("userId", ["userId"]),
+
+  application: defineTable({
+    userId: v.string(),
+    type: v.union(v.literal("attendee"), v.literal("mentor"), v.literal("volunteer")),
+    status: v.union(v.literal("draft"), v.literal("submitted"), v.literal("accepted"), v.literal("rejected")),
+    answers: v.record(v.string(), v.string()),
+    submittedAt: v.optional(v.number()),
+  })
+    .index("userId", ["userId"])
+    .index("userId_status", ["userId", "status"]),
 })

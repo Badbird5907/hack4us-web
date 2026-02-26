@@ -1,7 +1,7 @@
 "use client";
 
 import { Brain, Shield, Globe, HeartPulse } from "lucide-react";
-import { motion, type Variants } from "motion/react";
+import { motion } from "motion/react";
 
 const TRACKS = [
   {

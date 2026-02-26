@@ -1,13 +1,22 @@
+"use client";
+
 import type {
   ApplicationConfig,
   ApplicationSection,
   ApplicationQuestionsSchema,
-  ShortTextField,
   TextareaField,
   RadioField,
   CheckboxField,
   SelectField,
+  CustomField,
+  CustomFieldProps,
+  CustomFieldViewProps,
 } from "./schemas";
+import {
+  DietaryForm,
+  DietaryView,
+  parseDietaryValue,
+} from "./components/dietary";
 
 const sections = {
   background: {
@@ -39,7 +48,7 @@ const questions = {
       options: [
         { label: "Yes", value: "yes" },
         { label: "No, but I've volunteered elsewhere", value: "other" },
-        { label: "No, this would be my first time", value: "no" },
+        { label: "No, this would be my first time volunteering", value: "no" },
       ],
     } satisfies RadioField,
   },
@@ -74,6 +83,7 @@ const questions = {
       description: "Select all roles you'd be comfortable with.",
       required: true,
       minSelected: 1,
+      selectAll: true,
       options: [
         { label: "Registration & Check-in", value: "checkin" },
         { label: "Tech Support / AV Setup", value: "tech_support" },
@@ -96,6 +106,7 @@ const questions = {
       description: "Which time blocks can you attend? Select all that apply.",
       required: true,
       minSelected: 1,
+      selectAll: true,
       options: [
         { label: "Saturday morning (9 AM – 12 PM)", value: "sat_morning" },
         { label: "Saturday afternoon (12 PM – 5 PM)", value: "sat_afternoon" },
@@ -111,11 +122,21 @@ const questions = {
     sectionId: "logistics",
     order: 5,
     field: {
-      type: "text",
+      type: "custom",
       label: "Dietary Restrictions",
-      placeholder: "e.g. Vegetarian, Halal, Nut allergy, None",
-      maxLength: 200,
-    } satisfies ShortTextField,
+      description: "Select any that apply, or leave blank if none.",
+      component: DietaryForm as React.ComponentType<CustomFieldProps>,
+      viewComponent: DietaryView as React.ComponentType<CustomFieldViewProps>,
+      nudge: (value) => {
+        const val = parseDietaryValue(value);
+        if (val.selected.length === 0 && !val.other.trim())
+          return {
+            message: "We want everyone to enjoy the food! Don't be shy!",
+            tone: "info",
+          };
+        return null;
+      },
+    } satisfies CustomField,
   },
 
   tshirtSize: {

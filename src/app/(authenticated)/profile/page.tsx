@@ -14,6 +14,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeft,
   ArrowRight,
   Check,
@@ -294,7 +304,7 @@ function StepRoleAndEducation({
                 {isUniversityAttendee && (
                   <>
                     <p className="font-medium">
-                      hack4us is a high school hackathon.
+                      Hack4Us is a high school hackathon.
                     </p>
                     <p className="mt-1 text-amber-200/80">
                       University students are welcome to apply as a{" "}
@@ -653,6 +663,7 @@ const DEFAULT_FORM_DATA: ProfileFormData = {
 export default function ProfilePage() {
   const session = authClient.useSession();
   const profileResult = useQuery(api.fn.profile.getMyProfile, {});
+  const applicationResult = useQuery(api.fn.application.getMyApplication, {});
   const updateProfile = useMutation(api.fn.profile.updateMyProfile);
   const router = useRouter();
 
@@ -662,14 +673,12 @@ export default function ProfilePage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [initialized, setInitialized] = useState(false);
+  const [pendingRole, setPendingRole] = useState<ParticipantRole | null>(null);
 
-  // Track whether the initial data has loaded so we can pre-fill
   const hasPreFilled = useRef(false);
 
-  // profileResult is undefined while loading, { data: profile | null } once resolved
   const isLoading = session.isPending || !profileResult;
 
-  // Pre-fill form when data loads
   useEffect(() => {
     if (hasPreFilled.current) return;
     if (isLoading) return;
@@ -700,6 +709,7 @@ export default function ProfilePage() {
       },
     };
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormData(initialData);
     setInitialized(true);
   }, [isLoading, session.data?.user, profileResult]);
@@ -771,9 +781,21 @@ export default function ProfilePage() {
   };
 
   const updateRole = (role: ParticipantRole) => {
+    const existingApp = applicationResult?.application;
+    if (existingApp && existingApp.type !== role) {
+      setPendingRole(role);
+      return;
+    }
     setFormData((prev) => ({ ...prev, role }));
     // Discrete selection -- save immediately
     saveProfileToConvex({ role });
+  };
+
+  const confirmRoleSwitch = () => {
+    if (!pendingRole) return;
+    setFormData((prev) => ({ ...prev, role: pendingRole }));
+    saveProfileToConvex({ role: pendingRole });
+    setPendingRole(null);
   };
 
   const updateEducationLevel = (educationLevel: EducationLevel) => {
@@ -877,7 +899,6 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-black tracking-tight uppercase">
           Profile
@@ -896,10 +917,8 @@ export default function ProfilePage() {
         </AnimatePresence>
       </div>
 
-      {/* Step indicator */}
       <StepIndicator current={step} total={STEPS.length} />
 
-      {/* Form card */}
       <div className="border border-border bg-card p-8">
         <div className="mb-6 flex items-center justify-between overflow-hidden">
           <AnimatePresence mode="wait">
@@ -919,7 +938,6 @@ export default function ProfilePage() {
           </span>
         </div>
 
-        {/* Step content */}
         <div className="overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -971,7 +989,6 @@ export default function ProfilePage() {
           </AnimatePresence>
         </div>
 
-        {/* Navigation */}
         <div className="mt-8 flex items-center justify-between">
           <Button
             variant="ghost"
@@ -1026,10 +1043,37 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Save status */}
       <div className="flex justify-end">
         <SaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
       </div>
+
+      <AlertDialog
+        open={!!pendingRole}
+        onOpenChange={(open) => {
+          if (!open) setPendingRole(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch application type?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have an existing{" "}
+              <span className="font-medium text-foreground">
+                {applicationResult?.application?.type}
+              </span>{" "}
+              application. Switching to{" "}
+              <span className="font-medium text-foreground">{pendingRole}</span>{" "}
+              will discard your current application. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRoleSwitch}>
+              Switch & Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

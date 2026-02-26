@@ -1,3 +1,5 @@
+"use client";
+
 import type {
   ApplicationConfig,
   ApplicationSection,
@@ -6,12 +8,20 @@ import type {
   TextareaField,
   RadioField,
   SelectField,
+  CustomField,
+  CustomFieldProps,
+  CustomFieldViewProps,
 } from "./schemas";
+import {
+  DietaryForm,
+  DietaryView,
+  parseDietaryValue,
+} from "./components/dietary";
 
 const sections = {
   personal: {
     id: "personal",
-    title: "Personal Information",
+    title: "About You",
   },
   project: {
     id: "project",
@@ -26,36 +36,78 @@ const sections = {
 } satisfies Record<string, ApplicationSection>;
 
 const questions = {
-  experience: {
-    id: "experience",
+  hackathonCount: {
+    id: "hackathonCount",
     sectionId: "personal",
     order: 1,
     field: {
       type: "select",
-      label: "Coding Experience",
-      description: "How would you describe your current coding experience?",
+      label: "How many hackathons have you been to?",
       required: true,
       options: [
-        { label: "No experience — this is my first time!", value: "none" },
-        { label: "Beginner — I've done a few tutorials or school projects", value: "beginner" },
-        { label: "Intermediate — I've built personal or school projects", value: "intermediate" },
-        { label: "Advanced — I code regularly and have shipped projects", value: "advanced" },
+        { label: "This will be my first!", value: "0" },
+        { label: "1", value: "1" },
+        { label: "2–5", value: "2-5" },
+        { label: "5+", value: "5+" },
       ],
+      nudge: (value) => {
+        if (value === "0")
+          return {
+            message:
+              "Everyone starts somewhere — we're excited to be your first!",
+            tone: "encouraging",
+          };
+        if (value === "1")
+          return {
+            message:
+              "Nice, you've got one under your belt! This one will be even better.",
+            tone: "encouraging",
+          };
+        if (value === "2-5")
+          return {
+            message: "A seasoned hacker! We'd love to see what you build.",
+            tone: "encouraging",
+          };
+        if (value === "5+")
+          return {
+            message: "Wow, a hackathon veteran! Bring your A-game.",
+            tone: "encouraging",
+          };
+        return null;
+      },
     } satisfies SelectField,
   },
 
   whyAttend: {
     id: "whyAttend",
-    sectionId: "project",
+    sectionId: "personal",
     order: 2,
     field: {
       type: "textarea",
       label: "Why do you want to attend hack4us?",
-      placeholder: "Tell us what excites you about hackathons, what you hope to learn, etc.",
+      placeholder:
+        "Tell us what excites you about hackathons, what you hope to learn, etc.",
       required: true,
       minLength: 50,
       maxLength: 1000,
       rows: 4,
+      nudge: (value) => {
+        if (typeof value !== "string") return null;
+        if (value.length >= 50)
+          return {
+            message: "Great response!",
+            tone: "encouraging",
+          };
+        if (value.length >= 26)
+          return {
+            message: "Almost there -- tell us a bit more!",
+            tone: "tip",
+          };
+        return {
+          message: "Keep writing!",
+          tone: "tip",
+        };
+      },
     } satisfies TextareaField,
     validate: (value) => {
       if (typeof value === "string" && value.trim().length < 50) {
@@ -73,9 +125,19 @@ const questions = {
       label: "Project Idea",
       description:
         "Do you have a project idea in mind? Don't worry if you don't — you can always decide at the event!",
-      placeholder: "Describe what you'd like to build, the problem it solves, and any technologies you're considering.",
+      placeholder:
+        "Describe what you'd like to build, the problem it solves, and any technologies you're considering.",
       maxLength: 1500,
       rows: 5,
+      nudge: (value) => {
+        if (!value || (typeof value === "string" && value.trim().length === 0))
+          return {
+            message:
+              "No idea yet? No worries! Some of the best projects are born at the event.",
+            tone: "tip",
+          };
+        return null;
+      },
     } satisfies TextareaField,
   },
 
@@ -89,10 +151,29 @@ const questions = {
       description: "How do you plan to participate?",
       required: true,
       options: [
-        { label: "I already have a team", value: "have_team" },
-        { label: "I'm looking for teammates", value: "looking" },
         { label: "I'd like to work solo", value: "solo" },
+        { label: "I'm looking for teammates", value: "looking" },
+        { label: "I already have a team", value: "have_team" },
       ],
+      nudge: (value) => {
+        if (value === "solo")
+          return {
+            message:
+              "Going solo is totally fine! You can always join a team at the event if you change your mind.",
+            tone: "info",
+          };
+        if (value === "looking")
+          return {
+            message: "We'll help you find teammates during team formation!",
+            tone: "encouraging",
+          };
+        if (value === "have_team")
+          return {
+            message: "Great — make sure your teammates apply too!",
+            tone: "tip",
+          };
+        return null;
+      },
     } satisfies RadioField,
   },
 
@@ -101,11 +182,22 @@ const questions = {
     sectionId: "logistics",
     order: 5,
     field: {
-      type: "text",
+      type: "custom",
       label: "Dietary Restrictions",
-      placeholder: "e.g. Vegetarian, Halal, Nut allergy, None",
-      maxLength: 200,
-    } satisfies ShortTextField,
+      description: "Select any that apply, or leave blank if none.",
+      component: DietaryForm as React.ComponentType<CustomFieldProps>,
+      viewComponent: DietaryView as React.ComponentType<CustomFieldViewProps>,
+      nudge: (value) => {
+        const val = parseDietaryValue(value);
+        if (val.selected.length === 0 && !val.other.trim())
+          return {
+            message:
+              "We want everyone to enjoy the food! Don't be shy!",
+            tone: "info",
+          };
+        return null;
+      },
+    } satisfies CustomField,
   },
 
   tshirtSize: {
@@ -134,10 +226,19 @@ const questions = {
     field: {
       type: "text",
       label: "Emergency Contact",
-      description: "Name and phone number of a parent or guardian we can reach in an emergency.",
+      description:
+        "Name and phone number of a parent or guardian we can reach in an emergency.",
       placeholder: "e.g. Jane Smith — (416) 555-0123",
       required: true,
       maxLength: 200,
+      nudge: (value) => {
+        if (typeof value === "string" && value.trim().length > 0)
+          return {
+            message: "Thanks! This helps us keep everyone safe.",
+            tone: "info",
+          };
+        return null;
+      },
     } satisfies ShortTextField,
   },
 } satisfies ApplicationQuestionsSchema;
