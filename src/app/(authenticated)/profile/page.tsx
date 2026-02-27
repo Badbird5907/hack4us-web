@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SaveIndicator } from "@/components/application/save-indicator";
 import {
-  StepIndicator,
+  ProfileSectionNav,
   StepRoleAndEducation,
   StepName,
   StepSchool,
@@ -27,6 +27,7 @@ import {
 } from "@/components/profile";
 import { NavbarSlot } from "@/components/navbar-slot";
 import { ArrowLeft, ArrowRight, Check, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useProfileForm } from "./hooks";
 
 const STEPS = [
@@ -53,22 +54,35 @@ const STEPS = [
 const SCHOOL_MAX_LENGTH = 50;
 const BIO_MAX_LENGTH = 300;
 
-const stepVariants = {
-  enter: (dir: number) => ({
-    x: dir > 0 ? 32 : -32,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    transition: { type: "spring" as const, stiffness: 280, damping: 28 },
-  },
-  exit: (dir: number) => ({
-    x: dir > 0 ? -32 : 32,
-    opacity: 0,
-    transition: { duration: 0.15 },
-  }),
-};
+function LoadingSkeleton() {
+  return (
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-7 w-48" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+      <div className="flex gap-8">
+        <div className="hidden lg:block w-48 space-y-2 shrink-0">
+          <Skeleton className="h-3 w-16 mb-3" />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </div>
+        <div className="flex-1 space-y-6">
+          <div className="border border-border p-6 space-y-3">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-64" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <div className="border border-border p-6 space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const {
@@ -96,10 +110,28 @@ export default function ProfilePage() {
     updateLinks,
     goNext,
     goBack,
+    goToStep,
     completeOnboarding,
     confirmRoleSwitch,
     setPendingRole,
   } = useProfileForm();
+
+  const completedSteps = useMemo(() => {
+    const set = new Set<number>();
+    if (isRoleEducationValid) set.add(0);
+    if (formData.name.trim().length > 0 && formData.birthdate.length > 0) set.add(1);
+    if (formData.school.trim().length > 0 && formData.year.length > 0) set.add(2);
+    if (formData.bio.trim().length > 0) set.add(3);
+    if (formData.skills.length > 0 || formData.interests.length > 0) set.add(4);
+    const hasAnyLink =
+      formData.links.instagram ||
+      formData.links.twitter ||
+      formData.links.linkedin ||
+      formData.links.github ||
+      formData.links.external.length > 0;
+    if (hasAnyLink) set.add(5);
+    return set;
+  }, [formData, isRoleEducationValid]);
 
   const stepContent = useMemo(() => {
     if (step === 0) {
@@ -181,19 +213,7 @@ export default function ProfilePage() {
             Profile
           </span>
         </NavbarSlot>
-        <div className="mx-auto max-w-xl space-y-6">
-          <div>
-            <Skeleton className="h-7 w-40" />
-            <Skeleton className="mt-2 h-4 w-64" />
-          </div>
-          <Skeleton className="h-1.5 w-full rounded-full" />
-          <div className="border border-border bg-card p-8 space-y-4">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-9 w-full" />
-          </div>
-        </div>
+        <LoadingSkeleton />
       </>
     );
   }
@@ -205,29 +225,10 @@ export default function ProfilePage() {
           Profile
         </span>
       </NavbarSlot>
-      <div className="mx-auto max-w-xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight uppercase">
-            Profile
-          </h1>
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={step}
-              className="mt-1 text-sm text-muted-foreground"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.18 }}
-            >
-              {STEPS[step].description}
-            </motion.p>
-          </AnimatePresence>
-        </div>
 
-        <StepIndicator current={step} total={STEPS.length} />
-
+      <div className="mx-auto max-w-4xl">
         {hasExternalEdit && (
-          <Alert className="border-destructive/40">
+          <Alert className="mb-4 border-destructive/40">
             <AlertTriangle className="size-4" />
             <AlertTitle>Profile updated in another tab or device</AlertTitle>
             <AlertDescription>
@@ -244,125 +245,140 @@ export default function ProfilePage() {
           </Alert>
         )}
 
-        <div className="border border-border bg-card p-8">
-        <div className="mb-6 flex items-center justify-between overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.h2
-              key={step}
-              className="text-sm font-bold tracking-widest uppercase"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.16 }}
-            >
-              {STEPS[step].title}
-            </motion.h2>
-          </AnimatePresence>
-          <span className="text-xs text-muted-foreground">
-            {step + 1} / {STEPS.length}
-          </span>
-        </div>
+        <div className="flex gap-8">
+          <div className="hidden lg:block w-48 shrink-0">
+            <div className="sticky top-20">
+              <ProfileSectionNav
+                steps={STEPS}
+                currentIndex={step}
+                completedSteps={completedSteps}
+                onNavigate={goToStep}
+              />
+            </div>
+          </div>
 
-        <div
-          className={`overflow-hidden ${hasExternalEdit ? "pointer-events-none opacity-60" : ""}`}
-        >
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={step}
-              custom={direction}
-              variants={stepVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-            >
-              {stepContent}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        <div className="mt-8 flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={goBack}
-            disabled={step === 0 || hasExternalEdit}
-          >
-            <ArrowLeft className="size-4" />
-            Back
-          </Button>
-
-          <AnimatePresence mode="wait">
-            {step < STEPS.length - 1 ? (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-mono text-muted-foreground">
+                {step + 1} / {STEPS.length}
+              </span>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground">
+                {STEPS[step].title}
+              </span>
+            </div>
+            <div className="h-1 w-full bg-border overflow-hidden">
               <motion.div
-                key="next"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Button
-                  size="sm"
-                  onClick={() => goNext(STEPS.length)}
-                  disabled={hasExternalEdit || (step === 0 && !isRoleEducationValid)}
-                >
-                  Next
-                  <ArrowRight className="size-4" />
-                </Button>
-              </motion.div>
-            ) : (
+                className="h-full bg-primary"
+                animate={{
+                  width: `${((step + 1) / STEPS.length) * 100}%`,
+                }}
+                transition={{ type: "spring", stiffness: 200, damping: 25 }}
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0 pb-24 lg:pb-0">
+            <AnimatePresence mode="wait" custom={direction}>
               <motion.div
-                key="done"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.15 }}
+                key={step}
+                custom={direction}
+                initial={{ opacity: 0, x: direction > 0 ? 24 : -24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: direction > 0 ? -24 : 24 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="space-y-8"
               >
-                <Button
-                  size="sm"
-                  disabled={hasExternalEdit || !isFormComplete}
-                  onClick={completeOnboarding}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold tracking-[0.3em] text-primary uppercase">
+                      Section {String(step + 1).padStart(2, "0")}
+                    </span>
+                    <SaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
+                  </div>
+                  <h2 className="text-lg font-black tracking-wider uppercase mt-1">
+                    {STEPS[step].title}
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {STEPS[step].description}
+                  </p>
+                  <div className="mt-3 h-px bg-border" />
+                </div>
+
+                <div
+                  className={cn(
+                    hasExternalEdit && "pointer-events-none opacity-60"
+                  )}
                 >
-                  <Check className="size-4" />
-                  Done
-                </Button>
+                  {stepContent}
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goBack}
+                    disabled={step === 0 || hasExternalEdit}
+                    className="text-xs tracking-wider uppercase"
+                  >
+                    <ArrowLeft className="size-3 mr-1" />
+                    Back
+                  </Button>
+
+                  {step < STEPS.length - 1 ? (
+                    <Button
+                      size="sm"
+                      onClick={() => goNext(STEPS.length)}
+                      disabled={hasExternalEdit || (step === 0 && !isRoleEducationValid)}
+                      className="text-xs tracking-wider uppercase"
+                    >
+                      Next
+                      <ArrowRight className="size-3 ml-1" />
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      disabled={hasExternalEdit || !isFormComplete}
+                      onClick={completeOnboarding}
+                      className="text-xs tracking-wider uppercase"
+                    >
+                      <Check className="size-3 mr-1" />
+                      Done
+                    </Button>
+                  )}
+                </div>
               </motion.div>
-            )}
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         </div>
-        </div>
-
-        <div className="flex justify-end">
-          <SaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
-        </div>
-
-        <AlertDialog
-          open={!!pendingRole}
-          onOpenChange={(open) => {
-            if (!open) setPendingRole(null);
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Switch application type?</AlertDialogTitle>
-              <AlertDialogDescription>
-                You have an existing{" "}
-                <span className="font-medium text-foreground">
-                  {existingApplication?.type}
-                </span>{" "}
-                application. Switching to{" "}
-                <span className="font-medium text-foreground">{pendingRole}</span>{" "}
-                will discard your current application. This cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmRoleSwitch}>
-                Switch & Discard
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
+
+      <AlertDialog
+        open={!!pendingRole}
+        onOpenChange={(open) => {
+          if (!open) setPendingRole(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch application type?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have an existing{" "}
+              <span className="font-medium text-foreground">
+                {existingApplication?.type}
+              </span>{" "}
+              application. Switching to{" "}
+              <span className="font-medium text-foreground">{pendingRole}</span>{" "}
+              will discard your current application. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRoleSwitch}>
+              Switch & Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

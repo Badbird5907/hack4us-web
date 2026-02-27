@@ -1,6 +1,7 @@
 export { TagInput } from "./tag-input";
 export { OptionButton } from "./option-button";
 export { StepIndicator } from "./step-indicator";
+export { ProfileSectionNav } from "./section-nav";
 export { FieldLabel } from "./field-label";
 export { StepRoleAndEducation } from "./step-role-and-education";
 export { StepName } from "./step-name";

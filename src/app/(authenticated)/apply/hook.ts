@@ -101,6 +101,7 @@ export function useApplicationForm() {
 
   const hasPreFilled = useRef(false);
   const lastSyncedAnswersRef = useRef("");
+  const lastRemoteAnswersRef = useRef("");
 
   const profileRole = profileResult?.data?.role as AppType | undefined;
   const config: ApplicationConfig | null = profileRole
@@ -129,7 +130,9 @@ export function useApplicationForm() {
       existingApp && existingApp.type === profileRole
         ? existingApp.answers ?? {}
         : {};
-    lastSyncedAnswersRef.current = serializeAnswers(initialAnswers);
+    const initialSerialized = serializeAnswers(initialAnswers);
+    lastSyncedAnswersRef.current = initialSerialized;
+    lastRemoteAnswersRef.current = initialSerialized;
 
     if (Object.keys(initialAnswers).length > 0) {
       setAnswers(initialAnswers);
@@ -146,6 +149,17 @@ export function useApplicationForm() {
         ? remoteApp.answers ?? {}
         : {};
     const remoteSerialized = serializeAnswers(remoteAnswers);
+    if (!lastRemoteAnswersRef.current) {
+      lastRemoteAnswersRef.current = remoteSerialized;
+      if (!lastSyncedAnswersRef.current) {
+        lastSyncedAnswersRef.current = remoteSerialized;
+      }
+      return;
+    }
+    if (remoteSerialized === lastRemoteAnswersRef.current) {
+      return;
+    }
+    lastRemoteAnswersRef.current = remoteSerialized;
     if (!lastSyncedAnswersRef.current) {
       lastSyncedAnswersRef.current = remoteSerialized;
       return;

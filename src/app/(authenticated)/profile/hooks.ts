@@ -71,6 +71,7 @@ function buildInitialFormData(
 function serializeProfileFormData(data: ProfileFormData) {
   return JSON.stringify({
     ...data,
+    role: data.role || "attendee",
     skills: [...data.skills].sort(),
     interests: [...data.interests].sort(),
     links: {
@@ -146,6 +147,7 @@ export function useProfileForm() {
 
   const hasPreFilled = useRef(false);
   const lastSyncedProfileRef = useRef("");
+  const lastRemoteProfileRef = useRef("");
   const latestFormDataRef = useRef<ProfileFormData>(DEFAULT_FORM_DATA);
 
   const isLoading = session.isPending || !profileResult;
@@ -166,7 +168,9 @@ export function useProfileForm() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormData(initialData);
     latestFormDataRef.current = initialData;
-    lastSyncedProfileRef.current = serializeProfileFormData(initialData);
+    const initialSerialized = serializeProfileFormData(initialData);
+    lastSyncedProfileRef.current = initialSerialized;
+    lastRemoteProfileRef.current = initialSerialized;
     setInitialized(true);
   }, [isLoading, session.data?.user?.name, profile]);
 
@@ -174,6 +178,17 @@ export function useProfileForm() {
     if (!initialized) return;
     const remoteData = buildInitialFormData(session.data?.user?.name, profile);
     const remoteSerialized = serializeProfileFormData(remoteData);
+    if (!lastRemoteProfileRef.current) {
+      lastRemoteProfileRef.current = remoteSerialized;
+      if (!lastSyncedProfileRef.current) {
+        lastSyncedProfileRef.current = remoteSerialized;
+      }
+      return;
+    }
+    if (remoteSerialized === lastRemoteProfileRef.current) {
+      return;
+    }
+    lastRemoteProfileRef.current = remoteSerialized;
     if (!lastSyncedProfileRef.current) {
       lastSyncedProfileRef.current = remoteSerialized;
       return;
@@ -357,6 +372,13 @@ export function useProfileForm() {
     setStep((s) => Math.max(s - 1, 0));
   }, []);
 
+  const goToStep = useCallback((target: number) => {
+    setStep((prev) => {
+      setDirection(target > prev ? 1 : -1);
+      return Math.max(0, Math.min(target, 5));
+    });
+  }, []);
+
   const completeOnboarding = useCallback(async () => {
     if (hasExternalEdit) return;
     await updateProfile({ completedOnboarding: true });
@@ -397,6 +419,7 @@ export function useProfileForm() {
     updateLinks,
     goNext,
     goBack,
+    goToStep,
     completeOnboarding,
     confirmRoleSwitch,
     setPendingRole,
