@@ -13,7 +13,6 @@ export function StepSchool({
 }: StepSchoolProps) {
   const isUni = educationLevel === "university";
 
-  // Extract the raw number from the formatted string (e.g. "Grade 10" -> "10")
   const rawNumber = year.replace(/^(Grade|Year)\s*/i, "");
 
   const handleYearChange = (value: string) => {
@@ -21,8 +20,20 @@ export function StepSchool({
       onChangeYear("");
       return;
     }
+
+    const digitsOnly = value.replace(/\D/g, "");
+    if (!digitsOnly) {
+      onChangeYear("");
+      return;
+    }
+
+    const parsed = Number(digitsOnly);
+    const min = isUni ? 1 : 9;
+    const max = isUni ? 6 : 12;
+    const clamped = Math.min(Math.max(parsed, min), max);
+
     const prefix = isUni ? "Year" : "Grade";
-    onChangeYear(`${prefix} ${value}`);
+    onChangeYear(`${prefix} ${clamped}`);
   };
 
   return (

@@ -227,7 +227,7 @@ export function ReviewScreen({
             size="lg"
             disabled={!canSubmit}
             onClick={onSubmit}
-            className="w-full sm:w-auto px-12 font-black tracking-widest uppercase text-sm h-12"
+            className={"w-full sm:w-auto px-12 font-black tracking-widest uppercase text-sm h-12"}
           >
             {isSubmitting ? (
               <span className="flex items-center gap-2">

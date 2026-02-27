@@ -1,15 +1,15 @@
 "use client";
 
-import { useQuery } from "@/hooks/convex";
-import { api } from "@convex/_generated/api";
+import { MyApplicationWidget } from "./widgets/my-application";
+import { MyProfileWidget } from "./widgets/my-profile";
 
 export default function DashboardPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-black tracking-tight uppercase">Home</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Welcome to your dashboard.
-      </p>
+    <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 mb-24">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <MyProfileWidget />
+        <MyApplicationWidget />
+      </div>
     </div>
   );
 }

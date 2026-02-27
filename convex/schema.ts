@@ -28,7 +28,20 @@ export default defineSchema({
     status: v.union(v.literal("draft"), v.literal("submitted"), v.literal("accepted"), v.literal("rejected")),
     answers: v.record(v.string(), v.string()),
     submittedAt: v.optional(v.number()),
+    
+    decision: v.optional(v.object({
+      status: v.union(v.literal("accepted"), v.literal("rejected"), v.literal("waitlist")),
+      at: v.optional(v.number()),
+      by: v.optional(v.string()), // user id
+    }))
   })
     .index("userId", ["userId"])
     .index("userId_status", ["userId", "status"]),
+  
+  applicationComments: defineTable({
+    applicationId: v.id("application"),
+    content: v.string(),
+    authorId: v.string(), // user id
+    createdAt: v.number(),
+  }).index("applicationId", ["applicationId"]),
 })

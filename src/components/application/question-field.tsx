@@ -29,21 +29,19 @@ function OptionCard({
       disabled={disabled}
       className={`
         w-full border px-4 py-3 text-left text-sm font-medium transition-all
-        ${
-          selected
-            ? "border-primary bg-primary/10 text-primary"
-            : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
+        ${selected
+          ? "border-primary bg-primary/10 text-primary"
+          : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
         }
         ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
       `}
     >
       <span className="flex items-center gap-3">
         <span
-          className={`flex size-4 shrink-0 items-center justify-center border ${
-            selected
+          className={`flex size-4 shrink-0 items-center justify-center border ${selected
               ? "border-primary bg-primary"
               : "border-muted-foreground/40"
-          }`}
+            }`}
         >
           {selected && (
             <span className="block size-1.5 bg-primary-foreground" />
@@ -127,11 +125,10 @@ function TextareaFieldRenderer({
       {maxLength && (
         <div className="flex justify-end">
           <span
-            className={`text-[10px] font-mono tracking-wider ${
-              charCount > maxLength * 0.9
+            className={`text-[10px] font-mono tracking-wider ${charCount > maxLength * 0.9
                 ? "text-amber-500"
                 : "text-muted-foreground/50"
-            }`}
+              }`}
           >
             {charCount} / {maxLength}
           </span>
@@ -188,10 +185,9 @@ function CheckboxFieldRenderer({
           key={opt.value}
           className={`
             flex items-center gap-3 border px-4 py-3 text-sm transition-all cursor-pointer
-            ${
-              value.includes(opt.value)
-                ? "border-primary bg-primary/10 text-foreground"
-                : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+            ${value.includes(opt.value)
+              ? "border-primary bg-primary/10 text-foreground"
+              : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
             }
             ${field.disabled || opt.disabled ? "cursor-not-allowed opacity-50" : ""}
           `}
@@ -350,46 +346,51 @@ export function QuestionField({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-3">
-        <span className="font-mono text-xs font-bold text-primary mt-0.5 shrink-0">
+      <div>
+        <span className="font-mono text-xs font-bold text-primary mt-0.5 shrink-0 block md:hidden">
           {String(index + 1).padStart(2, "0")}
         </span>
-        <div className="space-y-1 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-bold tracking-wide uppercase">
-              {field.label}
-              {field.required && (
-                <span className="ml-1 text-primary">*</span>
+        <div className="flex items-start gap-3">
+          <span className="font-mono text-xs font-bold text-primary mt-0.5 shrink-0 hidden md:block">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <div className="space-y-1 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold tracking-wide uppercase">
+                {field.label}
+                {field.required && (
+                  <span className="ml-1 text-primary">*</span>
+                )}
+              </h3>
+              {selectAllProps && (
+                <button
+                  type="button"
+                  onClick={selectAllProps.handleSelectAll}
+                  className="text-[10px] cursor-pointer font-mono font-bold tracking-widest uppercase text-primary hover:text-primary/70 transition-colors shrink-0"
+                >
+                  {selectAllProps.allSelected ? "Deselect All" : "Select All"}
+                </button>
               )}
-            </h3>
-            {selectAllProps && (
-              <button
-                type="button"
-                onClick={selectAllProps.handleSelectAll}
-                className="text-[10px] cursor-pointer font-mono font-bold tracking-widest uppercase text-primary hover:text-primary/70 transition-colors shrink-0"
-              >
-                {selectAllProps.allSelected ? "Deselect All" : "Select All"}
-              </button>
+            </div>
+            {field.description && (
+              <p className="text-xs text-muted-foreground">
+                {field.description}
+              </p>
             )}
           </div>
-          {field.description && (
-            <p className="text-xs text-muted-foreground">
-              {field.description}
-            </p>
-          )}
         </div>
       </div>
 
-      <div className="pl-7">
+      <div className="pl-0 md:pl-7">
         {(field.type === "text" ||
           field.type === "email" ||
           field.type === "url") && (
-          <TextField
-            field={field}
-            value={value as string}
-            onChange={handleChange}
-          />
-        )}
+            <TextField
+              field={field}
+              value={value as string}
+              onChange={handleChange}
+            />
+          )}
         {field.type === "number" && (
           <NumberFieldRenderer
             field={field}

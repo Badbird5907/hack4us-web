@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +25,7 @@ import {
   StepSkills,
   StepLinks,
 } from "@/components/profile";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, AlertTriangle } from "lucide-react";
 import { useProfileForm } from "./hooks";
 
 const STEPS = [
@@ -76,6 +77,7 @@ export default function ProfilePage() {
     pendingRole,
     existingApplication,
     isRoleEducationLocked,
+    hasExternalEdit,
     isRoleEducationValid,
     isFormComplete,
     updateRole,
@@ -200,6 +202,24 @@ export default function ProfilePage() {
 
       <StepIndicator current={step} total={STEPS.length} />
 
+      {hasExternalEdit && (
+        <Alert className="border-destructive/40">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>Profile updated in another tab or device</AlertTitle>
+          <AlertDescription>
+            <p>This profile changed elsewhere. Reload to continue with the latest data.</p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2 text-xs tracking-wider uppercase"
+              onClick={() => window.location.reload()}
+            >
+              Reload latest
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="border border-border bg-card p-8">
         <div className="mb-6 flex items-center justify-between overflow-hidden">
           <AnimatePresence mode="wait">
@@ -219,7 +239,9 @@ export default function ProfilePage() {
           </span>
         </div>
 
-        <div className="overflow-hidden">
+        <div
+          className={`overflow-hidden ${hasExternalEdit ? "pointer-events-none opacity-60" : ""}`}
+        >
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={step}
@@ -239,7 +261,7 @@ export default function ProfilePage() {
             variant="ghost"
             size="sm"
             onClick={goBack}
-            disabled={step === 0}
+            disabled={step === 0 || hasExternalEdit}
           >
             <ArrowLeft className="size-4" />
             Back
@@ -257,7 +279,7 @@ export default function ProfilePage() {
                 <Button
                   size="sm"
                   onClick={() => goNext(STEPS.length)}
-                  disabled={step === 0 && !isRoleEducationValid}
+                  disabled={hasExternalEdit || (step === 0 && !isRoleEducationValid)}
                 >
                   Next
                   <ArrowRight className="size-4" />
@@ -273,7 +295,7 @@ export default function ProfilePage() {
               >
                 <Button
                   size="sm"
-                  disabled={!isFormComplete}
+                  disabled={hasExternalEdit || !isFormComplete}
                   onClick={completeOnboarding}
                 >
                   <Check className="size-4" />

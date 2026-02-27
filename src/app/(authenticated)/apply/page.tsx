@@ -1,22 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
-import { api } from "@convex/_generated/api";
-import { useQuery } from "@/hooks/convex";
-import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-
-import { applicationTypes } from "@/lib/questions";
-import type {
-  ApplicationConfig,
-  ApplicationQuestion,
-  ApplicationSection,
-} from "@/lib/questions/schemas";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowLeft, ArrowRight, AlertTriangle } from "lucide-react";
 
 import { QuestionField } from "@/components/application/question-field";
 import { SectionNav } from "@/components/application/section-nav";
@@ -24,65 +14,9 @@ import { SaveIndicator } from "@/components/application/save-indicator";
 import { ReviewScreen } from "@/components/application/review-screen";
 import { SubmitOverlay } from "@/components/application/submit-overlay";
 import { useNavbarSlot } from "@/components/navbar-slot";
+import { cn } from "@/lib/utils";
 
-type SaveStatus = "idle" | "saving" | "saved" | "error";
-type AppType = keyof typeof applicationTypes;
-
-function getOrderedSections(config: ApplicationConfig): ApplicationSection[] {
-  return Object.values(config.sections);
-}
-
-function getQuestionsForSection(
-  config: ApplicationConfig,
-  sectionId: string
-): ApplicationQuestion[] {
-  return Object.values(config.questions)
-    .filter((q) => q.sectionId === sectionId)
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-}
-
-function getMissingRequired(
-  config: ApplicationConfig,
-  answers: Record<string, string>
-): string[] {
-  return Object.values(config.questions)
-    .filter((q) => {
-      if (!q.field.required) return false;
-      const val = answers[q.id];
-      if (!val || val === "" || val === "[]" || val === "null") return true;
-      return false;
-    })
-    .map((q) => q.id);
-}
-
-function getCompletedSections(
-  config: ApplicationConfig,
-  answers: Record<string, string>
-): Set<string> {
-  const completed = new Set<string>();
-  const sections = Object.values(config.sections);
-
-  for (const section of sections) {
-    const questions = getQuestionsForSection(config, section.id);
-    if (questions.length === 0) continue;
-
-    const requiredQuestions = questions.filter((q) => q.field.required);
-
-    if (requiredQuestions.length === 0) {
-      if (questions.some((q) => answers[q.id] && answers[q.id] !== "")) {
-        completed.add(section.id);
-      }
-    } else {
-      const allFilled = requiredQuestions.every((q) => {
-        const val = answers[q.id];
-        return val && val !== "" && val !== "[]" && val !== "null";
-      });
-      if (allFilled) completed.add(section.id);
-    }
-  }
-
-  return completed;
-}
+import { useApply } from "./hook";
 
 function SubmittedView({ applicationType }: { applicationType: string }) {
   const router = useRouter();
@@ -138,45 +72,38 @@ function LoadingSkeleton() {
   );
 }
 
-const DEBOUNCE_MS = 800;
-
 export default function ApplyPage() {
   const router = useRouter();
-  const applicationResult = useQuery(api.fn.application.getMyApplication, {});
-  const profileResult = useQuery(api.fn.profile.getMyProfile, {});
-  const saveApplication = useMutation(api.fn.application.saveMyApplication);
-  const submitApplication = useMutation(api.fn.application.submitMyApplication);
-
-  const [currentSection, setCurrentSection] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
-  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSubmitOverlay, setShowSubmitOverlay] = useState(false);
-  const [initialized, setInitialized] = useState(false);
-
-  const hasPreFilled = useRef(false);
-
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "development") return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === "O") {
-        e.preventDefault();
-        setShowSubmitOverlay((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
-
-  const profileRole = profileResult?.data?.role as AppType | undefined;
-  const config: ApplicationConfig | null = profileRole
-    ? applicationTypes[profileRole] ?? null
-    : null;
+  const {
+    initialized,
+    isProfileLoading,
+    profileRole,
+    config,
+    sections,
+    answers,
+    errors,
+    saveStatus,
+    lastSavedAt,
+    isSubmitting,
+    showSubmitOverlay,
+    hasExternalEdit,
+    missingRequired,
+    validationErrors,
+    completedSections,
+    isSubmitted,
+    isOnReview,
+    currentSection,
+    currentSectionData,
+    currentQuestions,
+    handleAnswer,
+    goToSection,
+    goNext,
+    goBack,
+    handleSubmit,
+  } = useApply();
 
   const { setContent, clearContent } = useNavbarSlot();
-  const isProfileLoading = profileResult === undefined;
+
   useEffect(() => {
     setContent(
       <div className="flex items-baseline gap-2">
@@ -187,7 +114,9 @@ export default function ApplyPage() {
           <span className="inline-block h-3 w-20 bg-muted animate-pulse" />
         ) : profileRole ? (
           <>
-            <span className="text-muted-foreground text-sm leading-none">&mdash;</span>
+            <span className="text-muted-foreground text-sm leading-none">
+              &mdash;
+            </span>
             <span className="text-sm font-black tracking-widest uppercase leading-none text-primary">
               {profileRole}
             </span>
@@ -197,128 +126,6 @@ export default function ApplyPage() {
     );
     return () => clearContent();
   }, [isProfileLoading, profileRole, setContent, clearContent]);
-
-  useEffect(() => {
-    if (hasPreFilled.current) return;
-    if (!applicationResult || !profileResult) return;
-
-    hasPreFilled.current = true;
-
-    const existingApp = applicationResult.application;
-
-    if (existingApp && existingApp.type === profileRole && existingApp.status === "draft") {
-      setAnswers(existingApp.answers ?? {});
-    }
-
-    setInitialized(true);
-  }, [applicationResult, profileResult, profileRole]);
-
-  const doSave = useCallback(
-    async (answersToSave: Record<string, string>) => {
-      if (!profileRole || !config) return;
-      setSaveStatus("saving");
-      try {
-        await saveApplication({ type: profileRole, answers: answersToSave });
-        setSaveStatus("saved");
-        setLastSavedAt(new Date());
-      } catch {
-        setSaveStatus("error");
-      }
-    },
-    [profileRole, config, saveApplication]
-  );
-
-  const debouncedSave = useDebouncedCallback(doSave, DEBOUNCE_MS);
-
-  const handleAnswer = useCallback(
-    (questionId: string, serialized: string) => {
-      setAnswers((prev) => {
-        const next = { ...prev, [questionId]: serialized };
-        debouncedSave(next);
-        return next;
-      });
-      setErrors((prev) => {
-        if (!prev[questionId]) return prev;
-        const next = { ...prev };
-        delete next[questionId];
-        return next;
-      });
-    },
-    [debouncedSave]
-  );
-
-  const sections = useMemo(
-    () => (config ? getOrderedSections(config) : []),
-    [config]
-  );
-
-  const goToSection = useCallback((index: number) => {
-    setCurrentSection(index);
-  }, []);
-
-  const goNext = useCallback(() => {
-    const maxIndex = sections.length;
-    if (currentSection < maxIndex) {
-      goToSection(currentSection + 1);
-    }
-  }, [currentSection, sections.length, goToSection]);
-
-  const goBack = useCallback(() => {
-    if (currentSection > 0) {
-      goToSection(currentSection - 1);
-    }
-  }, [currentSection, goToSection]);
-
-  const missingRequired = useMemo(
-    () => (config ? getMissingRequired(config, answers) : []),
-    [config, answers]
-  );
-
-  // Run all validators eagerly so the review screen can block submit
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  useEffect(() => {
-    if (!config) return;
-    let cancelled = false;
-    (async () => {
-      const errs: Record<string, string> = {};
-      for (const question of Object.values(config.questions)) {
-        if (!question.validate) continue;
-        const val = answers[question.id];
-        let deserialized: unknown = val;
-        if (question.field.type === "checkbox" || question.field.type === "custom") {
-          try { deserialized = JSON.parse(val ?? ""); } catch { deserialized = val; }
-        }
-        const err = await question.validate(deserialized);
-        if (err) errs[question.id] = err;
-      }
-      if (!cancelled) setValidationErrors(errs);
-    })();
-    return () => { cancelled = true; };
-  }, [config, answers]);
-
-  const completedSections = useMemo(
-    () => (config ? getCompletedSections(config, answers) : new Set<string>()),
-    [config, answers]
-  );
-
-  const handleSubmit = useCallback(async () => {
-    if (!config || missingRequired.length > 0 || Object.keys(validationErrors).length > 0) return;
-
-    setIsSubmitting(true);
-    try {
-      if (profileRole) {
-        await saveApplication({ type: profileRole, answers });
-      }
-      await submitApplication({});
-      setShowSubmitOverlay(true);
-    } catch (err) {
-      setErrors({
-        __submit: err instanceof Error ? err.message : "Failed to submit. Please try again.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [config, missingRequired, validationErrors, answers, profileRole, saveApplication, submitApplication]);
 
   if (!initialized) {
     return <LoadingSkeleton />;
@@ -343,20 +150,33 @@ export default function ApplyPage() {
     );
   }
 
-  const existingApp = applicationResult?.application;
-  if (existingApp && existingApp.status !== "draft" && !showSubmitOverlay) {
+  if (isSubmitted) {
     return <SubmittedView applicationType={profileRole} />;
   }
-
-  const isOnReview = currentSection === sections.length;
-  const currentSectionData = isOnReview ? null : sections[currentSection];
-  const currentQuestions = currentSectionData
-    ? getQuestionsForSection(config, currentSectionData.id)
-    : [];
 
   return (
     <>
       <div className="mx-auto max-w-4xl">
+        {hasExternalEdit && (
+          <Alert className="mb-4 border-destructive/40">
+            <AlertTriangle className="size-4" />
+            <AlertTitle>Application updated in another tab or device</AlertTitle>
+            <AlertDescription>
+              <p>
+                This application changed elsewhere. Reload to continue with the
+                latest data.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 text-xs tracking-wider uppercase"
+                onClick={() => window.location.reload()}
+              >
+                Reload latest
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex gap-8">
           <div className="hidden lg:block w-48 shrink-0">
             <div className="sticky top-20">
@@ -375,9 +195,7 @@ export default function ApplyPage() {
                 {currentSection + 1} / {sections.length + 1}
               </span>
               <span className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground">
-                {isOnReview
-                  ? "Review"
-                  : currentSectionData?.title ?? ""}
+                {isOnReview ? "Review" : currentSectionData?.title ?? ""}
               </span>
             </div>
             <div className="h-1 w-full bg-border overflow-hidden">
@@ -407,7 +225,10 @@ export default function ApplyPage() {
                       <span className="text-[10px] font-mono font-bold tracking-[0.3em] text-primary uppercase">
                         Section {String(currentSection + 1).padStart(2, "0")}
                       </span>
-                      <SaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
+                      <SaveIndicator
+                        status={saveStatus}
+                        lastSavedAt={lastSavedAt}
+                      />
                     </div>
                     <h2 className="text-lg font-black tracking-wider uppercase mt-1">
                       {currentSectionData.title}
@@ -420,23 +241,30 @@ export default function ApplyPage() {
                     <div className="mt-3 h-px bg-border" />
                   </div>
 
-                  {currentQuestions.map((question, qi) => (
-                    <QuestionField
-                      key={question.id}
-                      question={question}
-                      index={qi}
-                      answers={answers}
-                      errors={errors}
-                      onAnswer={handleAnswer}
-                    />
-                  ))}
+                  <div
+                    className={cn(
+                      "space-y-4",
+                      hasExternalEdit && "pointer-events-none opacity-60"
+                    )}
+                  >
+                    {currentQuestions.map((question, qi) => (
+                      <QuestionField
+                        key={question.id}
+                        question={question}
+                        index={qi}
+                        answers={answers}
+                        errors={errors}
+                        onAnswer={handleAnswer}
+                      />
+                    ))}
+                  </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-border">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={goBack}
-                      disabled={currentSection === 0}
+                      disabled={currentSection === 0 || hasExternalEdit}
                       className="text-xs tracking-wider uppercase"
                     >
                       <ArrowLeft className="size-3 mr-1" />
@@ -445,6 +273,7 @@ export default function ApplyPage() {
                     <Button
                       size="sm"
                       onClick={goNext}
+                      disabled={hasExternalEdit}
                       className="text-xs tracking-wider uppercase"
                     >
                       {currentSection === sections.length - 1
@@ -479,11 +308,11 @@ export default function ApplyPage() {
                       variant="ghost"
                       size="sm"
                       onClick={goBack}
+                      disabled={hasExternalEdit}
                       className="text-xs tracking-wider uppercase"
                     >
                       <ArrowLeft className="size-3 mr-1" />
-                      Back to{" "}
-                      {sections[sections.length - 1]?.title ?? "Previous"}
+                      Back to {sections[sections.length - 1]?.title ?? "Previous"}
                     </Button>
                   </div>
 

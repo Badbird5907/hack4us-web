@@ -68,6 +68,18 @@ function buildInitialFormData(
   };
 }
 
+function serializeProfileFormData(data: ProfileFormData) {
+  return JSON.stringify({
+    ...data,
+    skills: [...data.skills].sort(),
+    interests: [...data.interests].sort(),
+    links: {
+      ...data.links,
+      external: [...data.links.external].sort(),
+    },
+  });
+}
+
 function buildProfileUpdateArgs(
   data: ProfileUpdatePayload
 ): Record<string, unknown> {
@@ -130,8 +142,11 @@ export function useProfileForm() {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [pendingRole, setPendingRole] = useState<ParticipantRole | null>(null);
+  const [hasExternalEdit, setHasExternalEdit] = useState(false);
 
   const hasPreFilled = useRef(false);
+  const lastSyncedProfileRef = useRef("");
+  const latestFormDataRef = useRef<ProfileFormData>(DEFAULT_FORM_DATA);
 
   const isLoading = session.isPending || !profileResult;
   const profile = profileResult?.data;
@@ -140,38 +155,72 @@ export function useProfileForm() {
     !!existingApplication && existingApplication.status !== "draft";
 
   useEffect(() => {
+    latestFormDataRef.current = formData;
+  }, [formData]);
+
+  useEffect(() => {
     if (hasPreFilled.current || isLoading) return;
 
     hasPreFilled.current = true;
+    const initialData = buildInitialFormData(session.data?.user?.name, profile);
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormData(buildInitialFormData(session.data?.user?.name, profile));
+    setFormData(initialData);
+    latestFormDataRef.current = initialData;
+    lastSyncedProfileRef.current = serializeProfileFormData(initialData);
     setInitialized(true);
   }, [isLoading, session.data?.user?.name, profile]);
 
+  useEffect(() => {
+    if (!initialized) return;
+    const remoteData = buildInitialFormData(session.data?.user?.name, profile);
+    const remoteSerialized = serializeProfileFormData(remoteData);
+    if (!lastSyncedProfileRef.current) {
+      lastSyncedProfileRef.current = remoteSerialized;
+      return;
+    }
+    if (remoteSerialized !== lastSyncedProfileRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHasExternalEdit(true);
+    }
+  }, [initialized, profile, session.data?.user?.name]);
+
   const saveNameToAuth = useCallback(async (name: string) => {
-    if (!name.trim()) return;
+    if (!name.trim() || hasExternalEdit) return;
     setSaveStatus("saving");
+    const previousSynced = lastSyncedProfileRef.current;
+    const nextState = { ...latestFormDataRef.current, name };
+    const nextSynced = serializeProfileFormData(nextState);
+    lastSyncedProfileRef.current = nextSynced;
     try {
       await authClient.updateUser({ name: name.trim() });
+      lastSyncedProfileRef.current = nextSynced;
       setSaveStatus("saved");
       setLastSavedAt(new Date());
     } catch {
+      lastSyncedProfileRef.current = previousSynced;
       setSaveStatus("error");
     }
-  }, []);
+  }, [hasExternalEdit]);
 
   const saveProfileToConvex = useCallback(
-    async (data: ProfileUpdatePayload) => {
+    async (data: ProfileUpdatePayload, nextState?: ProfileFormData) => {
+      if (hasExternalEdit) return;
       setSaveStatus("saving");
+      const previousSynced = lastSyncedProfileRef.current;
+      const syncedState = nextState ?? latestFormDataRef.current;
+      const nextSynced = serializeProfileFormData(syncedState);
+      lastSyncedProfileRef.current = nextSynced;
       try {
         await updateProfile(buildProfileUpdateArgs(data));
+        lastSyncedProfileRef.current = nextSynced;
         setSaveStatus("saved");
         setLastSavedAt(new Date());
       } catch {
+        lastSyncedProfileRef.current = previousSynced;
         setSaveStatus("error");
       }
     },
-    [updateProfile]
+    [hasExternalEdit, updateProfile]
   );
 
   const debouncedSaveName = useDebouncedCallback(saveNameToAuth, DEBOUNCE_MS);
@@ -187,6 +236,7 @@ export function useProfileForm() {
       mode: "immediate" | "debounced",
       getPayload?: (nextState: ProfileFormData) => ProfileUpdatePayload
     ) => {
+      if (hasExternalEdit) return;
       setFormData((prev) => {
         const nextState = { ...prev, [key]: value };
         const payload = getPayload
@@ -194,23 +244,24 @@ export function useProfileForm() {
           : ({ [key]: value } as ProfileUpdatePayload);
 
         if (mode === "immediate") {
-          void saveProfileToConvex(payload);
+          void saveProfileToConvex(payload, nextState);
         } else {
-          debouncedSaveProfile(payload);
+          debouncedSaveProfile(payload, nextState);
         }
 
         return nextState;
       });
     },
-    [debouncedSaveProfile, saveProfileToConvex]
+    [debouncedSaveProfile, hasExternalEdit, saveProfileToConvex]
   );
 
   const updateName = useCallback(
     (name: string) => {
+      if (hasExternalEdit) return;
       setFormData((prev) => ({ ...prev, name }));
       debouncedSaveName(name);
     },
-    [debouncedSaveName]
+    [debouncedSaveName, hasExternalEdit]
   );
 
   const updateBirthdate = useCallback(
@@ -222,6 +273,7 @@ export function useProfileForm() {
 
   const updateRole = useCallback(
     (role: ParticipantRole) => {
+      if (hasExternalEdit) return;
       if (isRoleEducationLocked) return;
       if (existingApplication && existingApplication.type !== role) {
         setPendingRole(role);
@@ -229,14 +281,15 @@ export function useProfileForm() {
       }
       updateProfileField("role", role, "immediate");
     },
-    [existingApplication, isRoleEducationLocked, updateProfileField]
+    [existingApplication, hasExternalEdit, isRoleEducationLocked, updateProfileField]
   );
 
   const confirmRoleSwitch = useCallback(() => {
+    if (hasExternalEdit) return;
     if (!pendingRole) return;
     updateProfileField("role", pendingRole, "immediate");
     setPendingRole(null);
-  }, [pendingRole, updateProfileField]);
+  }, [hasExternalEdit, pendingRole, updateProfileField]);
 
   const updateEducationLevel = useCallback(
     (educationLevel: EducationLevel) => {
@@ -305,9 +358,10 @@ export function useProfileForm() {
   }, []);
 
   const completeOnboarding = useCallback(async () => {
+    if (hasExternalEdit) return;
     await updateProfile({ completedOnboarding: true });
     router.push("/dashboard");
-  }, [router, updateProfile]);
+  }, [hasExternalEdit, router, updateProfile]);
 
   const isRoleEducationValid = useMemo(
     () => getIsRoleEducationValid(formData),
@@ -326,6 +380,7 @@ export function useProfileForm() {
     pendingRole,
     existingApplication,
     isRoleEducationLocked,
+    hasExternalEdit,
     // Derived
     isRoleEducationValid,
     isFormComplete,
