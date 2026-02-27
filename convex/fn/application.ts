@@ -47,8 +47,8 @@ export const saveMyApplication = mutation({
       });
     }
 
-    if (existing.status !== "draft") {
-      throw new ConvexError({ code: "BAD_REQUEST", message: `Cannot save: you already have a ${existing.status} application. ` + `Please contact support if you need to make changes.` });
+    if (existing.status === "submitted") {
+      throw new ConvexError({ code: "BAD_REQUEST", message: `Cannot save: you already have a ${existing.status} application. ` + `Please contact us if you need to make changes.` });
     }
 
     if (existing.type !== args.type) {

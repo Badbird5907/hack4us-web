@@ -25,6 +25,7 @@ import {
   StepSkills,
   StepLinks,
 } from "@/components/profile";
+import { NavbarSlot } from "@/components/navbar-slot";
 import { ArrowLeft, ArrowRight, Check, AlertTriangle } from "lucide-react";
 import { useProfileForm } from "./hooks";
 
@@ -48,6 +49,9 @@ const STEPS = [
     description: "Connect your socials and share your work.",
   },
 ] as const;
+
+const SCHOOL_MAX_LENGTH = 50;
+const BIO_MAX_LENGTH = 300;
 
 const stepVariants = {
   enter: (dir: number) => ({
@@ -126,13 +130,20 @@ export default function ProfilePage() {
           school={formData.school}
           year={formData.year}
           educationLevel={formData.educationLevel}
-          onChangeSchool={updateSchool}
+          maxLength={SCHOOL_MAX_LENGTH}
+          onChangeSchool={(value) => updateSchool(value.slice(0, SCHOOL_MAX_LENGTH))}
           onChangeYear={updateYear}
         />
       );
     }
     if (step === 3) {
-      return <StepBio bio={formData.bio} onChange={updateBio} />;
+      return (
+        <StepBio
+          bio={formData.bio}
+          maxLength={BIO_MAX_LENGTH}
+          onChange={(value) => updateBio(value.slice(0, BIO_MAX_LENGTH))}
+        />
+      );
     }
     if (step === 4) {
       return (
@@ -164,63 +175,76 @@ export default function ProfilePage() {
 
   if (!initialized) {
     return (
-      <div className="mx-auto max-w-xl space-y-6">
-        <div>
-          <Skeleton className="h-7 w-40" />
-          <Skeleton className="mt-2 h-4 w-64" />
+      <>
+        <NavbarSlot>
+          <span className="text-sm font-black tracking-widest uppercase leading-none">
+            Profile
+          </span>
+        </NavbarSlot>
+        <div className="mx-auto max-w-xl space-y-6">
+          <div>
+            <Skeleton className="h-7 w-40" />
+            <Skeleton className="mt-2 h-4 w-64" />
+          </div>
+          <Skeleton className="h-1.5 w-full rounded-full" />
+          <div className="border border-border bg-card p-8 space-y-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-9 w-full" />
+          </div>
         </div>
-        <Skeleton className="h-1.5 w-full rounded-full" />
-        <div className="border border-border bg-card p-8 space-y-4">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-9 w-full" />
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-9 w-full" />
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-black tracking-tight uppercase">
+    <>
+      <NavbarSlot>
+        <span className="text-sm font-black tracking-widest uppercase leading-none">
           Profile
-        </h1>
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={step}
-            className="mt-1 text-sm text-muted-foreground"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.18 }}
-          >
-            {STEPS[step].description}
-          </motion.p>
-        </AnimatePresence>
-      </div>
-
-      <StepIndicator current={step} total={STEPS.length} />
-
-      {hasExternalEdit && (
-        <Alert className="border-destructive/40">
-          <AlertTriangle className="size-4" />
-          <AlertTitle>Profile updated in another tab or device</AlertTitle>
-          <AlertDescription>
-            <p>This profile changed elsewhere. Reload to continue with the latest data.</p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-2 text-xs tracking-wider uppercase"
-              onClick={() => window.location.reload()}
+        </span>
+      </NavbarSlot>
+      <div className="mx-auto max-w-xl space-y-6">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight uppercase">
+            Profile
+          </h1>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={step}
+              className="mt-1 text-sm text-muted-foreground"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.18 }}
             >
-              Reload latest
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+              {STEPS[step].description}
+            </motion.p>
+          </AnimatePresence>
+        </div>
 
-      <div className="border border-border bg-card p-8">
+        <StepIndicator current={step} total={STEPS.length} />
+
+        {hasExternalEdit && (
+          <Alert className="border-destructive/40">
+            <AlertTriangle className="size-4" />
+            <AlertTitle>Profile updated in another tab or device</AlertTitle>
+            <AlertDescription>
+              <p>This profile changed elsewhere. Reload to continue with the latest data.</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 text-xs tracking-wider uppercase"
+                onClick={() => window.location.reload()}
+              >
+                Reload latest
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="border border-border bg-card p-8">
         <div className="mb-6 flex items-center justify-between overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.h2
@@ -305,39 +329,40 @@ export default function ProfilePage() {
             )}
           </AnimatePresence>
         </div>
-      </div>
+        </div>
 
-      <div className="flex justify-end">
-        <SaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
-      </div>
+        <div className="flex justify-end">
+          <SaveIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
+        </div>
 
-      <AlertDialog
-        open={!!pendingRole}
-        onOpenChange={(open) => {
-          if (!open) setPendingRole(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Switch application type?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have an existing{" "}
-              <span className="font-medium text-foreground">
-                {existingApplication?.type}
-              </span>{" "}
-              application. Switching to{" "}
-              <span className="font-medium text-foreground">{pendingRole}</span>{" "}
-              will discard your current application. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRoleSwitch}>
-              Switch & Discard
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        <AlertDialog
+          open={!!pendingRole}
+          onOpenChange={(open) => {
+            if (!open) setPendingRole(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Switch application type?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You have an existing{" "}
+                <span className="font-medium text-foreground">
+                  {existingApplication?.type}
+                </span>{" "}
+                application. Switching to{" "}
+                <span className="font-medium text-foreground">{pendingRole}</span>{" "}
+                will discard your current application. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmRoleSwitch}>
+                Switch & Discard
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </>
   );
 }

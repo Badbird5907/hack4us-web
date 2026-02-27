@@ -79,7 +79,7 @@ function serializeAnswers(answers: Record<string, string>) {
   );
 }
 
-export function useApply() {
+export function useApplicationForm() {
   const applicationResult = useQuery(api.fn.application.getMyApplication, {});
   const profileResult = useQuery(api.fn.profile.getMyProfile, {});
   const saveApplication = useMutation(api.fn.application.saveMyApplication);
@@ -97,6 +97,7 @@ export function useApply() {
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
+  const [isViewingApplication, setIsViewingApplication] = useState(false);
 
   const hasPreFilled = useRef(false);
   const lastSyncedAnswersRef = useRef("");
@@ -125,9 +126,7 @@ export function useApply() {
 
     const existingApp = applicationResult.application;
     const initialAnswers =
-      existingApp &&
-      existingApp.type === profileRole &&
-      existingApp.status === "draft"
+      existingApp && existingApp.type === profileRole
         ? existingApp.answers ?? {}
         : {};
     lastSyncedAnswersRef.current = serializeAnswers(initialAnswers);
@@ -143,9 +142,7 @@ export function useApply() {
     if (!initialized) return;
     const remoteApp = applicationResult?.application;
     const remoteAnswers =
-      remoteApp &&
-      remoteApp.type === profileRole &&
-      remoteApp.status === "draft"
+      remoteApp && remoteApp.type === profileRole
         ? remoteApp.answers ?? {}
         : {};
     const remoteSerialized = serializeAnswers(remoteAnswers);
@@ -160,7 +157,7 @@ export function useApply() {
 
   const doSave = useCallback(
     async (answersToSave: Record<string, string>) => {
-      if (!profileRole || !config || hasExternalEdit) return;
+      if (!profileRole || !config || hasExternalEdit || isViewingApplication) return;
       setSaveStatus("saving");
       const previousSynced = lastSyncedAnswersRef.current;
       const nextSynced = serializeAnswers(answersToSave);
@@ -175,7 +172,7 @@ export function useApply() {
         setSaveStatus("error");
       }
     },
-    [profileRole, config, hasExternalEdit, saveApplication]
+    [profileRole, config, hasExternalEdit, saveApplication, isViewingApplication]
   );
 
   const debouncedSave = useDebouncedCallback(doSave, DEBOUNCE_MS);
@@ -328,6 +325,7 @@ export function useApply() {
     completedSections,
     isSubmitted,
     isOnReview,
+    isViewingApplication,
     currentSection,
     currentSectionData,
     currentQuestions,
@@ -338,5 +336,6 @@ export function useApply() {
     goNext,
     goBack,
     handleSubmit,
+    setIsViewingApplication,
   };
 }

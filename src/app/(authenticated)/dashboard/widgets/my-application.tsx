@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@/hooks/convex";
+import { applicationTypes } from "@/lib/questions";
 import { api } from "@convex/_generated/api";
 import { CheckCircle2, Clock3, FileText, XCircle } from "lucide-react";
 
@@ -45,6 +46,27 @@ function formatDate(timestamp: number) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function getDraftCompletion(application: {
+  type: keyof typeof applicationTypes;
+  answers?: Record<string, string>;
+}): number {
+  const config = applicationTypes[application.type];
+  if (!config) return 0;
+
+  const requiredQuestions = Object.values(config.questions).filter(
+    (question) => question.field.required
+  );
+  if (requiredQuestions.length === 0) return 100;
+
+  const answers = application.answers ?? {};
+  const completedCount = requiredQuestions.filter((question) => {
+    const value = answers[question.id];
+    return !!value && value !== "" && value !== "[]" && value !== "null";
+  }).length;
+
+  return Math.round((completedCount / requiredQuestions.length) * 100);
 }
 
 export function MyApplicationWidget() {
@@ -92,6 +114,7 @@ export function MyApplicationWidget() {
 
   const status = statuses[application.status];
   const StatusIcon = status.icon;
+  const draftCompletion = application.status === "draft" ? getDraftCompletion(application) : null;
   const submissionDate =
     application.submittedAt ??
     (application.status === "draft" ? application._creationTime : undefined);
@@ -110,6 +133,18 @@ export function MyApplicationWidget() {
       </CardHeader>
 
       <CardContent className="flex-1 min-h-0 space-y-4">
+        {application.status === "draft" ? (
+          <div className="rounded-lg border bg-background/80 p-4">
+            <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+              <span>Application completion</span>
+              <span>{draftCompletion}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${draftCompletion}%` }} />
+            </div>
+          </div>
+        ) : null}
+
         <div className="rounded-lg border bg-background/80 p-4">
           <p className="text-sm font-medium">{status.detail}</p>
         </div>

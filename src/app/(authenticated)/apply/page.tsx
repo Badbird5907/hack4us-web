@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -13,12 +12,12 @@ import { SectionNav } from "@/components/application/section-nav";
 import { SaveIndicator } from "@/components/application/save-indicator";
 import { ReviewScreen } from "@/components/application/review-screen";
 import { SubmitOverlay } from "@/components/application/submit-overlay";
-import { useNavbarSlot } from "@/components/navbar-slot";
+import { NavbarSlot } from "@/components/navbar-slot";
 import { cn } from "@/lib/utils";
 
-import { useApply } from "./hook";
+import { useApplicationForm } from "./hook";
 
-function SubmittedView({ applicationType }: { applicationType: string }) {
+function SubmittedView({ applicationType, setIsViewingApplication }: { applicationType: string, setIsViewingApplication: (value: boolean) => void }) {
   const router = useRouter();
 
   return (
@@ -33,13 +32,23 @@ function SubmittedView({ applicationType }: { applicationType: string }) {
           soon.
         </p>
       </div>
-      <Button
-        onClick={() => router.push("/dashboard")}
-        className="font-bold tracking-widest uppercase text-xs"
-      >
-        Go to Dashboard
-        <ArrowRight className="ml-1 size-3" />
-      </Button>
+      <div className="flex items-center justify-center gap-4 flex-row">
+        <Button
+          onClick={() => router.push("/dashboard")}
+          className="font-bold tracking-widest uppercase text-xs"
+        >
+          Go to Dashboard
+          <ArrowRight className="ml-1 size-3" />
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => setIsViewingApplication(true)}
+          className="font-bold tracking-widest uppercase text-xs"
+        >
+          View Application
+          <ArrowRight className="ml-1 size-3" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -100,35 +109,35 @@ export default function ApplyPage() {
     goNext,
     goBack,
     handleSubmit,
-  } = useApply();
-
-  const { setContent, clearContent } = useNavbarSlot();
-
-  useEffect(() => {
-    setContent(
-      <div className="flex items-baseline gap-2">
-        <span className="text-sm font-black tracking-widest uppercase leading-none">
-          Apply
-        </span>
-        {isProfileLoading ? (
-          <span className="inline-block h-3 w-20 bg-muted animate-pulse" />
-        ) : profileRole ? (
-          <>
-            <span className="text-muted-foreground text-sm leading-none">
-              &mdash;
-            </span>
-            <span className="text-sm font-black tracking-widest uppercase leading-none text-primary">
-              {profileRole}
-            </span>
-          </>
-        ) : null}
-      </div>
-    );
-    return () => clearContent();
-  }, [isProfileLoading, profileRole, setContent, clearContent]);
+    isViewingApplication,
+    setIsViewingApplication,
+  } = useApplicationForm();
 
   if (!initialized) {
-    return <LoadingSkeleton />;
+    return (
+      <>
+        <NavbarSlot>
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-black tracking-widest uppercase leading-none">
+              Apply
+            </span>
+            {isProfileLoading ? (
+              <span className="inline-block h-3 w-20 bg-muted animate-pulse" />
+            ) : profileRole ? (
+              <>
+                <span className="text-muted-foreground text-sm leading-none">
+                  &mdash;
+                </span>
+                <span className="text-sm font-black tracking-widest uppercase leading-none text-primary">
+                  {profileRole}
+                </span>
+              </>
+            ) : null}
+          </div>
+        </NavbarSlot>
+        <LoadingSkeleton />
+      </>
+    );
   }
 
   if (!profileRole || !config) {
@@ -150,14 +159,45 @@ export default function ApplyPage() {
     );
   }
 
-  if (isSubmitted) {
-    return <SubmittedView applicationType={profileRole} />;
+  if (isSubmitted && !isViewingApplication) {
+    return <SubmittedView applicationType={profileRole} setIsViewingApplication={setIsViewingApplication} />;
   }
 
   return (
     <>
+      <NavbarSlot>
+        <div className="flex items-baseline gap-2">
+          <span className="text-sm font-black tracking-widest uppercase leading-none">
+            Apply
+          </span>
+          {isProfileLoading ? (
+            <span className="inline-block h-3 w-20 bg-muted animate-pulse" />
+          ) : profileRole ? (
+            <>
+              <span className="text-muted-foreground text-sm leading-none">
+                &mdash;
+              </span>
+              <span className="text-sm font-black tracking-widest uppercase leading-none text-primary">
+                {profileRole}
+              </span>
+            </>
+          ) : null}
+        </div>
+      </NavbarSlot>
       <div className="mx-auto max-w-4xl">
-        {hasExternalEdit && (
+        {isViewingApplication && isSubmitted && (
+          <Alert className="mb-4 border-destructive/40">
+            <AlertTriangle className="size-4" />
+            <AlertTitle>Application submitted</AlertTitle>
+            <AlertDescription>
+              <p>
+                Your application has been submitted. We&apos;ll review it and get back to you
+                soon.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+        {hasExternalEdit && !isViewingApplication && (
           <Alert className="mb-4 border-destructive/40">
             <AlertTriangle className="size-4" />
             <AlertTitle>Application updated in another tab or device</AlertTitle>
@@ -244,7 +284,7 @@ export default function ApplyPage() {
                   <div
                     className={cn(
                       "space-y-4",
-                      hasExternalEdit && "pointer-events-none opacity-60"
+                      (hasExternalEdit || isSubmitted || isViewingApplication) && "pointer-events-none opacity-60"
                     )}
                   >
                     {currentQuestions.map((question, qi) => (
@@ -255,6 +295,7 @@ export default function ApplyPage() {
                         answers={answers}
                         errors={errors}
                         onAnswer={handleAnswer}
+                        disabled={hasExternalEdit || isSubmitted || isViewingApplication}
                       />
                     ))}
                   </div>
@@ -301,6 +342,7 @@ export default function ApplyPage() {
                     onEditSection={goToSection}
                     onSubmit={handleSubmit}
                     isSubmitting={isSubmitting}
+                    isViewingApplication={isViewingApplication}
                   />
 
                   <div className="mt-6 pt-4 border-t border-border">

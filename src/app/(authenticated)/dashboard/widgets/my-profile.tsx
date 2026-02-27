@@ -8,10 +8,6 @@ import { useQuery } from "@/hooks/convex";
 import { api } from "@convex/_generated/api";
 import { CheckCircle2, CircleDashed, UserRound } from "lucide-react";
 
-const educationLabel: Record<string, string> = {
-  high_school: "High School",
-  university: "University",
-};
 
 function getCompletion(profile: {
   role?: string;
@@ -64,7 +60,7 @@ export function MyProfileWidget() {
   const roleLabel = profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : "Not set";
 
   return (
-    <Card className="overflow-hidden border-primary/20 bg-linear-to-br from-primary/5 via-background to-background">
+    <Card className="overflow-hidden border-primary/20 bg-linear-to-br from-primary/5 via-background to-background flex flex-col">
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-xl">My Profile</CardTitle>
@@ -74,33 +70,46 @@ export function MyProfileWidget() {
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          Keep your information updated so your application can be reviewed smoothly.
+          Make sure your profile is complete and up to date.
         </p>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div className="rounded-lg border bg-background/80 p-4">
-          <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
-            <span>Profile completion</span>
-            <span>{percent}%</span>
+      <CardContent className="flex-1 space-y-4">
+        {percent < 100 ? (
+          <div className="rounded-lg border bg-background/80 p-4">
+            <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+              <span>Profile completion</span>
+              <span>{percent}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${percent}%` }} />
+            </div>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${percent}%` }} />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border bg-background/80 p-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Role</p>
+              <p className="mt-1 text-sm font-semibold">{roleLabel}</p>
+            </div>
+            <div className="rounded-lg border bg-background/80 p-3">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">School</p>
+              <p className="mt-1 text-sm font-semibold truncate">
+                {profile?.school
+                  ? profile.year
+                    ? `${profile.school}, ${profile.year}`
+                    : profile.school
+                  : "Not set"}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        {complete && profile?.bio && (
           <div className="rounded-lg border bg-background/80 p-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Role</p>
-            <p className="mt-1 text-sm font-semibold">{roleLabel}</p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Bio</p>
+            <p className="mt-1 text-sm line-clamp-2 font-semibold truncate">{profile.bio}</p>
           </div>
-          <div className="rounded-lg border bg-background/80 p-3">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Education</p>
-            <p className="mt-1 text-sm font-semibold">
-              {profile?.educationLevel ? educationLabel[profile.educationLevel] : "Not set"}
-            </p>
-          </div>
-        </div>
+        )}
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <UserRound className="size-4" />
@@ -110,7 +119,7 @@ export function MyProfileWidget() {
         </div>
       </CardContent>
 
-      <CardFooter className="justify-end border-t">
+      <CardFooter className="justify-end border-t mt-auto">
         <Button asChild variant={complete ? "outline" : "default"} className="w-full">
           <Link href="/profile">{complete ? "View Profile" : "Complete Profile"}</Link>
         </Button>

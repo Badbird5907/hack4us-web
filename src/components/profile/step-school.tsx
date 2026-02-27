@@ -8,6 +8,7 @@ export function StepSchool({
   school,
   year,
   educationLevel,
+  maxLength,
   onChangeSchool,
   onChangeYear,
 }: StepSchoolProps) {
@@ -43,6 +44,7 @@ export function StepSchool({
         <Input
           value={school}
           onChange={(e) => onChangeSchool(e.target.value)}
+          maxLength={maxLength}
           placeholder={
             isUni
               ? "e.g. University of Toronto"
@@ -55,6 +57,11 @@ export function StepSchool({
             {isUni
               ? "Please enter your full university name (e.g. University of Toronto)"
               : "Please enter your full school name (e.g. York Mills Collegiate Institute, Toronto)"}
+          </p>
+        )}
+        {typeof maxLength === "number" && (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {school.length}/{maxLength}
           </p>
         )}
       </div>

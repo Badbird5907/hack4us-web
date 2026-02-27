@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { AlertCircle, Pencil, Check } from "lucide-react";
+import { AlertCircle, Pencil, Check,Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
   ApplicationConfig,
@@ -17,6 +17,7 @@ interface ReviewScreenProps {
   onEditSection: (sectionIndex: number) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
+  isViewingApplication: boolean;
 }
 
 function getDisplayValue(question: ApplicationQuestion, raw: string | undefined): string {
@@ -65,6 +66,7 @@ export function ReviewScreen({
   onEditSection,
   onSubmit,
   isSubmitting,
+  isViewingApplication,
 }: ReviewScreenProps) {
   const sections = Object.values(config.sections);
   const allQuestions = Object.values(config.questions);
@@ -78,21 +80,23 @@ export function ReviewScreen({
 
   return (
     <div className="space-y-8">
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="h-px flex-1 bg-primary/40" />
-          <span className="text-[10px] font-mono font-bold tracking-[0.3em] text-primary uppercase">
-            Review
-          </span>
-          <div className="h-px flex-1 bg-primary/40" />
+      {!isViewingApplication && (
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-px flex-1 bg-primary/40" />
+            <span className="text-[10px] font-mono font-bold tracking-[0.3em] text-primary uppercase">
+              Review
+            </span>
+            <div className="h-px flex-1 bg-primary/40" />
+          </div>
+          <h2 className="text-center text-lg font-black tracking-wider uppercase">
+            Review Your Application
+          </h2>
+          <p className="mt-1 text-center text-xs text-muted-foreground">
+            Double-check your answers before submitting.
+          </p>
         </div>
-        <h2 className="text-center text-lg font-black tracking-wider uppercase">
-          Review Your Application
-        </h2>
-        <p className="mt-1 text-center text-xs text-muted-foreground">
-          Double-check your answers before submitting.
-        </p>
-      </div>
+      )}
 
       {(missingRequired.length > 0 || Object.keys(validationErrors).length > 0) && (
         <motion.div
@@ -153,8 +157,19 @@ export function ReviewScreen({
                 onClick={() => onEditSection(sectionIdx)}
                 className="h-7 text-[10px] gap-1"
               >
-                <Pencil className="size-3" />
-                Edit
+                {/* <Pencil className="size-3" />
+                Edit */}
+                {isViewingApplication ? (
+                  <>
+                    <Eye className="size-3" />
+                    View
+                  </>
+                ) : (
+                  <>
+                    <Pencil className="size-3" />
+                    Edit
+                  </>
+                )}
               </Button>
             </div>
 
@@ -211,35 +226,37 @@ export function ReviewScreen({
         );
       })}
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: sections.length * 0.05 }}
-        className="border border-border bg-card p-6"
-      >
-        <div className="text-center space-y-4">
-          <p className="text-xs text-muted-foreground">
-            {canSubmit
-              ? "Everything looks good. Ready to submit?"
-              : "Complete all required fields to submit your application."}
-          </p>
-          <Button
-            size="lg"
-            disabled={!canSubmit}
-            onClick={onSubmit}
-            className={"w-full sm:w-auto px-12 font-black tracking-widest uppercase text-sm h-12"}
-          >
-            {isSubmitting ? (
-              <span className="flex items-center gap-2">
-                <span className="size-4 border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
-                Submitting...
-              </span>
-            ) : (
-              "Submit Application"
-            )}
-          </Button>
-        </div>
-      </motion.div>
+      {!isViewingApplication && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: sections.length * 0.05 }}
+          className="border border-border bg-card p-6"
+        >
+          <div className="text-center space-y-4">
+            <p className="text-xs text-muted-foreground">
+              {canSubmit
+                ? "Everything looks good. Ready to submit?"
+                : "Complete all required fields to submit your application."}
+            </p>
+            <Button
+              size="lg"
+              disabled={!canSubmit}
+              onClick={onSubmit}
+              className={"w-full sm:w-auto px-12 font-black tracking-widest uppercase text-sm h-12"}
+            >
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="size-4 border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
+                  Submitting...
+                </span>
+              ) : (
+                "Submit Application"
+              )}
+            </Button>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

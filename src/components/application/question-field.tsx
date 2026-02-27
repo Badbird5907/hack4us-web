@@ -308,12 +308,14 @@ export function QuestionField({
   answers,
   errors,
   onAnswer,
+  disabled,
 }: {
   question: ApplicationQuestion;
   index: number;
   answers: Record<string, string>;
   errors: Record<string, string>;
   onAnswer: (questionId: string, serialized: string) => void;
+  disabled: boolean;
 }) {
   const { field } = question;
   const rawValue = answers[question.id];
@@ -322,6 +324,7 @@ export function QuestionField({
   const [touched, setTouched] = useState(rawValue !== undefined);
 
   const handleChange = (v: unknown) => {
+    if (disabled) return;
     setTouched(true);
     onAnswer(question.id, serializeValue(field, v));
   };

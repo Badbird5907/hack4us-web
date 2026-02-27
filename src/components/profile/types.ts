@@ -63,12 +63,14 @@ export interface StepSchoolProps {
   school: string;
   year: string;
   educationLevel: EducationLevel | "";
+  maxLength?: number;
   onChangeSchool: (value: string) => void;
   onChangeYear: (value: string) => void;
 }
 
 export interface StepBioProps {
   bio: string;
+  maxLength?: number;
   onChange: (bio: string) => void;
 }
 
