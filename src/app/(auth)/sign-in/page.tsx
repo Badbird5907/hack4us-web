@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter,useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { SocialAuthButtons } from "@/components/auth/social-buttons";
@@ -28,7 +28,11 @@ export default function SignInPage() {
     });
 
     if (error) {
-      setError(error.message ?? "Failed to sign in.");
+      if (error.status === 403) {
+        setError("Please verify your email from the link sent to your inbox before signing in.");
+      } else {
+        setError(error.message ?? "Failed to sign in.");
+      }
       setLoading(false);
     } else {
       router.push(next);

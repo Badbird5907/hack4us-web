@@ -7,6 +7,7 @@ import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import { admin } from "better-auth/plugins";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
+import { sendVerificationEmailViaSmtp } from "../src/lib/email/smtp";
 
 const siteUrl = process.env.SITE_URL!;
 
@@ -27,7 +28,20 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: false,
+      requireEmailVerification: true,
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      sendOnSignIn: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        void sendVerificationEmailViaSmtp({
+          email: user.email,
+          name: user.name,
+          verificationUrl: url,
+        }).catch((error) => {
+          console.error("[auth] Failed to send verification email", error);
+        });
+      },
     },
     socialProviders: {
       google: {

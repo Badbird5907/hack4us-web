@@ -1,18 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
 import { SocialAuthButtons } from "@/components/auth/social-buttons"
 import { Hack4UsLogo } from "@/components/hack4us-logo"
 
 export default function SignUpPage() {
-  const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
   const next = searchParams.get("next") || "/"
@@ -20,6 +20,7 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setSuccess(null)
     setLoading(true)
 
     const { error } = await authClient.signUp.email({
@@ -33,7 +34,11 @@ export default function SignUpPage() {
       setError(error.message ?? "Failed to create account.")
       setLoading(false)
     } else {
-      router.push(next)
+      setSuccess(
+        "Account created. Check your inbox for a verification link before signing in."
+      )
+      setLoading(false)
+      setPassword("")
     }
   }
 
@@ -51,7 +56,6 @@ export default function SignUpPage() {
           <p className="mb-8 text-xs text-muted-foreground tracking-wide">
             Register to participate in the hackathon.
           </p>
-z
           <SocialAuthButtons callbackURL={next} />
 
           <div className="flex items-center gap-3 py-4">
@@ -116,6 +120,10 @@ z
               <p className="text-xs text-primary tracking-wide">{error}</p>
             )}
 
+            {success && (
+              <p className="text-xs text-emerald-600 tracking-wide">{success}</p>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -129,7 +137,7 @@ z
             <p className="text-xs text-muted-foreground tracking-wide">
               Already have an account?{" "}
               <Link
-                href={next ? `/sign-up?next=${next}` : "/sign-up"}
+                href={next ? `/sign-in?next=${next}` : "/sign-in"}
                 className="font-semibold text-foreground hover:text-primary transition-colors"
               >
                 Sign In
