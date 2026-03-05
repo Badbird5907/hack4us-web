@@ -36,20 +36,23 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       sendOnSignUp: true,
       sendOnSignIn: true,
       sendVerificationEmail: async ({ user, url }) => {
-        const html = await render(
-          VerificationEmail({
-            userName: user.name,
-            verificationUrl: url,
-          })
-        );
+        try {
+          const html = await render(
+            VerificationEmail({
+              userName: user.name,
+              verificationUrl: url,
+            })
+          );
 
-        void sendEmail({
-          to: user.email,
-          subject: "Verify your Hack4Us account",
-          html,
-        }).catch((error) => {
+          await sendEmail({
+            to: user.email,
+            subject: "Verify your Hack4Us account",
+            html,
+          });
+        } catch (error) {
           console.error("[auth] Failed to send verification email", error);
-        });
+          throw new Error("Unable to send verification email.");
+        }
       },
     },
     socialProviders: {
