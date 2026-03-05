@@ -7,7 +7,9 @@ import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
 import { admin } from "better-auth/plugins";
 import authConfig from "./auth.config";
 import authSchema from "./betterAuth/schema";
-import { sendVerificationEmailViaSmtp } from "../src/lib/email/smtp";
+import { render } from "@react-email/render";
+import { VerificationEmail } from "../src/emails/verification-email";
+import { sendEmail } from "../src/lib/email/smtp";
 
 const siteUrl = process.env.SITE_URL!;
 
@@ -34,10 +36,17 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       sendOnSignUp: true,
       sendOnSignIn: true,
       sendVerificationEmail: async ({ user, url }) => {
-        void sendVerificationEmailViaSmtp({
-          email: user.email,
-          name: user.name,
-          verificationUrl: url,
+        const html = await render(
+          VerificationEmail({
+            userName: user.name,
+            verificationUrl: url,
+          })
+        );
+
+        void sendEmail({
+          to: user.email,
+          subject: "Verify your Hack4Us account",
+          html,
         }).catch((error) => {
           console.error("[auth] Failed to send verification email", error);
         });

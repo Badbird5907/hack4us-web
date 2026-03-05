@@ -1,11 +1,10 @@
-import { render } from "@react-email/render";
 import nodemailer from "nodemailer";
-import { VerificationEmail } from "../../emails/verification-email";
 
-type SendVerificationEmailInput = {
-  email: string;
-  name?: string;
-  verificationUrl: string;
+type SendEmailInput = {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
 };
 
 const smtpHost = process.env.SMTP_HOST;
@@ -29,29 +28,17 @@ const transporter = hasSmtpConfig
     })
   : null;
 
-export async function sendVerificationEmailViaSmtp({
-  email,
-  name,
-  verificationUrl,
-}: SendVerificationEmailInput) {
+export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
   if (!transporter || !smtpFrom) {
-    console.warn(
-      "[auth] SMTP is not configured. Skipping verification email delivery."
-    );
+    console.warn("[auth] SMTP is not configured. Skipping email delivery.");
     return;
   }
 
-  const html = await render(
-    VerificationEmail({
-      userName: name,
-      verificationUrl,
-    })
-  );
-
   await transporter.sendMail({
     from: smtpFrom,
-    to: email,
-    subject: "Verify your Hack4Us account",
+    to,
+    subject,
     html,
+    text,
   });
 }
