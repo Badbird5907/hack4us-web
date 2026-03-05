@@ -41,6 +41,7 @@ const questions = {
     id: "expertise",
     sectionId: "experience",
     order: 1,
+    showToReviewer: true,
     field: {
       type: "checkbox",
       label: "Areas of Expertise",
@@ -66,6 +67,7 @@ const questions = {
     id: "yearsExperience",
     sectionId: "experience",
     order: 2,
+    showToReviewer: true,
     field: {
       type: "select",
       label: "Years of Technical Experience",
@@ -83,6 +85,7 @@ const questions = {
     id: "previousMentoring",
     sectionId: "mentoring",
     order: 3,
+    showToReviewer: true,
     field: {
       type: "radio",
       label: "Have you mentored at a hackathon before?",
@@ -99,6 +102,7 @@ const questions = {
     id: "whyMentor",
     sectionId: "mentoring",
     order: 4,
+    showToReviewer: true,
     field: {
       type: "textarea",
       label: "Why do you want to mentor at hack4us?",
@@ -119,6 +123,7 @@ const questions = {
     id: "availability",
     sectionId: "mentoring",
     order: 5,
+    showToReviewer: true,
     field: {
       type: "checkbox",
       label: "Availability",
@@ -139,6 +144,7 @@ const questions = {
     id: "dietaryRestrictions",
     sectionId: "logistics",
     order: 6,
+    showToReviewer: true,
     field: {
       type: "custom",
       label: "Dietary Restrictions",
@@ -161,6 +167,7 @@ const questions = {
     id: "tshirtSize",
     sectionId: "logistics",
     order: 7,
+    showToReviewer: false,
     field: {
       type: "select",
       label: "T-Shirt Size",

@@ -41,6 +41,7 @@ const questions = {
     id: "previousVolunteering",
     sectionId: "background",
     order: 1,
+    showToReviewer: true,
     field: {
       type: "radio",
       label: "Have you volunteered at a hackathon or similar event before?",
@@ -57,6 +58,7 @@ const questions = {
     id: "whyVolunteer",
     sectionId: "volunteering",
     order: 2,
+    showToReviewer: true,
     field: {
       type: "textarea",
       label: "Why do you want to volunteer at hack4us?",
@@ -77,6 +79,7 @@ const questions = {
     id: "preferredRoles",
     sectionId: "volunteering",
     order: 3,
+    showToReviewer: true,
     field: {
       type: "checkbox",
       label: "Preferred Volunteer Roles",
@@ -100,6 +103,7 @@ const questions = {
     id: "availability",
     sectionId: "volunteering",
     order: 4,
+    showToReviewer: true,
     field: {
       type: "checkbox",
       label: "Availability",
@@ -121,6 +125,7 @@ const questions = {
     id: "dietaryRestrictions",
     sectionId: "logistics",
     order: 5,
+    showToReviewer: true,
     field: {
       type: "custom",
       label: "Dietary Restrictions",
@@ -143,6 +148,7 @@ const questions = {
     id: "tshirtSize",
     sectionId: "logistics",
     order: 6,
+    showToReviewer: false,
     field: {
       type: "select",
       label: "T-Shirt Size",
