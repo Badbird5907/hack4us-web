@@ -12,6 +12,7 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const isReady = email.trim().length > 0 && password.length >= 8;
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/";
@@ -101,8 +102,12 @@ export default function SignInPage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-primary px-8 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase transition-all hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={loading || !isReady}
+              className={`w-full px-8 py-4 text-sm font-bold tracking-widest uppercase transition-all disabled:cursor-not-allowed ${
+                loading || !isReady
+                  ? "bg-primary/50 text-muted-foreground"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
             >
               {loading ? "Signing In…" : "Sign In"}
             </button>

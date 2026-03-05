@@ -14,6 +14,7 @@ import type {
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 export type AppType = keyof typeof applicationTypes;
+export type ApplicationsState = "open" | "closed" | "ended";
 
 const DEBOUNCE_MS = 800;
 
@@ -82,8 +83,12 @@ function serializeAnswers(answers: Record<string, string>) {
 export function useApplicationForm() {
   const applicationResult = useQuery(api.fn.application.getMyApplication, {});
   const profileResult = useQuery(api.fn.profile.getMyProfile, {});
+  const applicationsStateResult = useQuery(api.fn.siteSettings.getApplicationsState, {});
   const saveApplication = useMutation(api.fn.application.saveMyApplication);
   const submitApplication = useMutation(api.fn.application.submitMyApplication);
+
+  const applicationsState: ApplicationsState = applicationsStateResult ?? "open";
+  const isApplicationsOpen = applicationsState === "open";
 
   const [currentSection, setCurrentSection] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -171,7 +176,7 @@ export function useApplicationForm() {
 
   const doSave = useCallback(
     async (answersToSave: Record<string, string>) => {
-      if (!profileRole || !config || hasExternalEdit || isViewingApplication) return;
+      if (!profileRole || !config || hasExternalEdit || isViewingApplication || !isApplicationsOpen) return;
       setSaveStatus("saving");
       const previousSynced = lastSyncedAnswersRef.current;
       const nextSynced = serializeAnswers(answersToSave);
@@ -186,7 +191,7 @@ export function useApplicationForm() {
         setSaveStatus("error");
       }
     },
-    [profileRole, config, hasExternalEdit, saveApplication, isViewingApplication]
+    [profileRole, config, hasExternalEdit, saveApplication, isViewingApplication, isApplicationsOpen]
   );
 
   const debouncedSave = useDebouncedCallback(doSave, DEBOUNCE_MS);
@@ -275,6 +280,7 @@ export function useApplicationForm() {
   const handleSubmit = useCallback(async () => {
     if (
       hasExternalEdit ||
+      !isApplicationsOpen ||
       !config ||
       missingRequired.length > 0 ||
       Object.keys(validationErrors).length > 0
@@ -299,6 +305,7 @@ export function useApplicationForm() {
     }
   }, [
     hasExternalEdit,
+    isApplicationsOpen,
     config,
     missingRequired,
     validationErrors,
@@ -324,6 +331,8 @@ export function useApplicationForm() {
     // Data
     initialized,
     isProfileLoading,
+    applicationsState,
+    isApplicationsOpen,
     profileRole,
     config,
     sections,

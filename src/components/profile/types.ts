@@ -14,6 +14,7 @@ export interface ProfileLinks {
 export interface ProfileFormData {
   role: ParticipantRole | "";
   educationLevel: EducationLevel | "";
+  marketingOptIn: boolean;
   name: string;
   birthdate: string;
   school: string;
@@ -27,6 +28,7 @@ export interface ProfileFormData {
 export const DEFAULT_FORM_DATA: ProfileFormData = {
   role: "",
   educationLevel: "",
+  marketingOptIn: false,
   name: "",
   birthdate: "",
   school: "",
@@ -46,8 +48,10 @@ export const DEFAULT_FORM_DATA: ProfileFormData = {
 export interface StepRoleAndEducationProps {
   role: ParticipantRole | "";
   educationLevel: EducationLevel | "";
+  marketingOptIn: boolean;
   onChangeRole: (role: ParticipantRole) => void;
   onChangeEducationLevel: (level: EducationLevel) => void;
+  onChangeMarketingOptIn: (value: boolean) => void;
   isSelectionLocked?: boolean;
   onGoNext?: () => void;
 }

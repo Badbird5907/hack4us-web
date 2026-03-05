@@ -21,8 +21,10 @@ function getApplicationFormCopy(role: StepRoleAndEducationProps["role"]) {
 export function StepRoleAndEducation({
   role,
   educationLevel,
+  marketingOptIn,
   onChangeRole,
   onChangeEducationLevel,
+  onChangeMarketingOptIn,
   isSelectionLocked = false,
   onGoNext,
 }: StepRoleAndEducationProps) {
@@ -104,6 +106,29 @@ export function StepRoleAndEducation({
       </div>
 
       <p className="text-xs text-muted-foreground">{roleApplicationCopy}</p>
+
+      <div>
+        <label className="mb-3 block text-[10px] font-semibold tracking-[0.2em] text-primary uppercase">
+          Update Emails
+        </label>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Would you like updates on deadlines, prizes, and sponsors? We promise not to spam you!
+        </p>
+        <div className="flex gap-2">
+          <OptionButton
+            selected={marketingOptIn}
+            onClick={() => onChangeMarketingOptIn(true)}
+          >
+            Yes, keep me posted
+          </OptionButton>
+          <OptionButton
+            selected={!marketingOptIn}
+            onClick={() => onChangeMarketingOptIn(false)}
+          >
+            No, thanks
+          </OptionButton>
+        </div>
+      </div>
 
       <AnimatePresence>
         {isInvalidCombo && (

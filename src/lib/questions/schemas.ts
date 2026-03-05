@@ -141,6 +141,7 @@ export const ApplicationQuestionSchema = z.object({
   id: z.string(),
   sectionId: z.string().optional(),
   order: z.number().int().nonnegative().optional(),
+  showToReviewer: z.boolean().optional().default(false),
   field: ApplicationFieldSchema,
   validate: z.custom<ValidatorFn>().optional(),
 });

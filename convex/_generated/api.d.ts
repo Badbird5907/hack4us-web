@@ -9,10 +9,21 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as fn_admin from "../fn/admin.js";
+import type * as fn_ai_index from "../fn/ai/index.js";
+import type * as fn_ai_internal from "../fn/ai/internal.js";
 import type * as fn_application from "../fn/application.js";
+import type * as fn_email from "../fn/email.js";
+import type * as fn_emailActions from "../fn/emailActions.js";
+import type * as fn_emailWorker from "../fn/emailWorker.js";
 import type * as fn_index from "../fn/index.js";
 import type * as fn_profile from "../fn/profile.js";
+import type * as fn_review from "../fn/review.js";
+import type * as fn_seed from "../fn/seed.js";
+import type * as fn_siteSettings from "../fn/siteSettings.js";
 import type * as http from "../http.js";
+import type * as shared from "../shared.js";
+import type * as workpools from "../workpools.js";
 
 import type {
   ApiFromModules,
@@ -22,10 +33,21 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  "fn/admin": typeof fn_admin;
+  "fn/ai/index": typeof fn_ai_index;
+  "fn/ai/internal": typeof fn_ai_internal;
   "fn/application": typeof fn_application;
+  "fn/email": typeof fn_email;
+  "fn/emailActions": typeof fn_emailActions;
+  "fn/emailWorker": typeof fn_emailWorker;
   "fn/index": typeof fn_index;
   "fn/profile": typeof fn_profile;
+  "fn/review": typeof fn_review;
+  "fn/seed": typeof fn_seed;
+  "fn/siteSettings": typeof fn_siteSettings;
   http: typeof http;
+  shared: typeof shared;
+  workpools: typeof workpools;
 }>;
 
 /**
@@ -55,6 +77,104 @@ export declare const internal: FilterApi<
 >;
 
 export declare const components: {
+  emailWorkpool: {
+    config: {
+      update: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+          maxParallelism?: number;
+        },
+        any
+      >;
+    };
+    lib: {
+      cancel: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          id: string;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      cancelAll: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          before?: number;
+          limit?: number;
+          logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+        },
+        any
+      >;
+      enqueue: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          fnArgs: any;
+          fnHandle: string;
+          fnName: string;
+          fnType: "action" | "mutation" | "query";
+          onComplete?: { context?: any; fnHandle: string };
+          retryBehavior?: {
+            base: number;
+            initialBackoffMs: number;
+            maxAttempts: number;
+          };
+          runAt: number;
+        },
+        string
+      >;
+      enqueueBatch: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          config: {
+            logLevel?: "DEBUG" | "TRACE" | "INFO" | "REPORT" | "WARN" | "ERROR";
+            maxParallelism?: number;
+          };
+          items: Array<{
+            fnArgs: any;
+            fnHandle: string;
+            fnName: string;
+            fnType: "action" | "mutation" | "query";
+            onComplete?: { context?: any; fnHandle: string };
+            retryBehavior?: {
+              base: number;
+              initialBackoffMs: number;
+              maxAttempts: number;
+            };
+            runAt: number;
+          }>;
+        },
+        Array<string>
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        | { previousAttempts: number; state: "pending" }
+        | { previousAttempts: number; state: "running" }
+        | { state: "finished" }
+      >;
+      statusBatch: FunctionReference<
+        "query",
+        "internal",
+        { ids: Array<string> },
+        Array<
+          | { previousAttempts: number; state: "pending" }
+          | { previousAttempts: number; state: "running" }
+          | { state: "finished" }
+        >
+      >;
+    };
+  };
   betterAuth: {
     adapter: {
       create: FunctionReference<

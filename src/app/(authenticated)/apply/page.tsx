@@ -86,6 +86,8 @@ export default function ApplyPage() {
   const {
     initialized,
     isProfileLoading,
+    applicationsState,
+    isApplicationsOpen,
     profileRole,
     config,
     sections,
@@ -154,6 +156,30 @@ export default function ApplyPage() {
           className="font-bold tracking-widest uppercase text-xs"
         >
           Go to Profile
+        </Button>
+      </div>
+    );
+  }
+
+  if (!isApplicationsOpen) {
+    const message =
+      applicationsState === "ended"
+        ? "Applications have ended."
+        : "Applications will open soon.";
+
+    return (
+      <div className="mx-auto max-w-xl text-center py-16 space-y-4">
+        <h1 className="text-2xl font-black tracking-tight uppercase">
+          Applications {applicationsState === "closed" ? "Opening Soon" : "Ended"}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {message}
+        </p>
+        <Button
+          onClick={() => router.push("/dashboard")}
+          className="font-bold tracking-widest uppercase text-xs"
+        >
+          Go to Dashboard
         </Button>
       </div>
     );

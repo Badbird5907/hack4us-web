@@ -40,6 +40,7 @@ const questions = {
     id: "hackathonCount",
     sectionId: "personal",
     order: 1,
+    showToReviewer: true,
     field: {
       type: "select",
       label: "How many hackathons have you been to?",
@@ -78,10 +79,51 @@ const questions = {
     } satisfies SelectField,
   },
 
+  proudProject: {
+    id: "proudProject",
+    sectionId: "personal",
+    order: 2,
+    showToReviewer: true,
+    field: {
+      type: "textarea",
+      label:
+        "What is a project (technical or non-technical) that you've done that you're really proud of?",
+      placeholder:
+        "It doesn't have to be code — tell us about anything you've built, created, or accomplished.",
+      required: true,
+      minLength: 50,
+      maxLength: 1000,
+      rows: 4,
+      nudge: (value) => {
+        if (typeof value !== "string") return null;
+        if (value.length >= 50)
+          return {
+            message: "Great response!",
+            tone: "encouraging",
+          };
+        if (value.length >= 26)
+          return {
+            message: "Almost there — tell us a bit more!",
+            tone: "tip",
+          };
+        return {
+          message: "Keep writing!",
+          tone: "tip",
+        };
+      },
+    } satisfies TextareaField,
+    validate: (value) => {
+      if (typeof value === "string" && value.trim().length < 50) {
+        return "Please write at least 50 characters.";
+      }
+    },
+  },
+
   whyAttend: {
     id: "whyAttend",
     sectionId: "personal",
-    order: 2,
+    order: 3,
+    showToReviewer: true,
     field: {
       type: "textarea",
       label: "Why do you want to attend hack4us?",
@@ -100,7 +142,7 @@ const questions = {
           };
         if (value.length >= 26)
           return {
-            message: "Almost there -- tell us a bit more!",
+            message: "Almost there — tell us a bit more!",
             tone: "tip",
           };
         return {
@@ -116,35 +158,89 @@ const questions = {
     },
   },
 
-  projectIdea: {
-    id: "projectIdea",
+  getOutOfIt: {
+    id: "getOutOfIt",
     sectionId: "project",
-    order: 3,
+    order: 4,
+    showToReviewer: true,
     field: {
       type: "textarea",
-      label: "Project Idea",
-      description:
-        "Do you have a project idea in mind? Don't worry if you don't — you can always decide at the event!",
+      label:
+        "Aside from the free food, swag, and winning, what would you like to get out of Hack4Us?",
       placeholder:
-        "Describe what you'd like to build, the problem it solves, and any technologies you're considering.",
-      maxLength: 1500,
-      rows: 5,
+        "Skills, connections, inspiration — what matters most to you?",
+      required: true,
+      minLength: 50,
+      maxLength: 1000,
+      rows: 4,
       nudge: (value) => {
-        if (!value || (typeof value === "string" && value.trim().length === 0))
+        if (typeof value !== "string") return null;
+        if (value.length >= 50)
           return {
-            message:
-              "No idea yet? No worries! Some of the best projects are born at the event.",
+            message: "Love it!",
+            tone: "encouraging",
+          };
+        if (value.length >= 26)
+          return {
+            message: "Almost there — tell us a bit more!",
             tone: "tip",
           };
-        return null;
+        return {
+          message: "Keep writing!",
+          tone: "tip",
+        };
       },
     } satisfies TextareaField,
+    validate: (value) => {
+      if (typeof value === "string" && value.trim().length < 50) {
+        return "Please write at least 50 characters.";
+      }
+    },
+  },
+
+  lifetimeGoal: {
+    id: "lifetimeGoal",
+    sectionId: "project",
+    order: 5,
+    showToReviewer: true,
+    field: {
+      type: "textarea",
+      label: "What is a lifetime goal of yours?",
+      placeholder: "Dream big — we want to know what drives you.",
+      required: true,
+      minLength: 50,
+      maxLength: 1000,
+      rows: 4,
+      nudge: (value) => {
+        if (typeof value !== "string") return null;
+        if (value.length >= 50)
+          return {
+            message: "Great answer!",
+            tone: "encouraging",
+          };
+        if (value.length >= 26)
+          return {
+            message: "Almost there — tell us a bit more!",
+            tone: "tip",
+          };
+        return {
+          message: "Keep writing!",
+          tone: "tip",
+        };
+      },
+    } satisfies TextareaField,
+    validate: (value) => {
+      if (typeof value === "string" && value.trim().length < 50) {
+        return "Please write at least 50 characters.";
+      }
+    },
   },
 
   teamPreference: {
     id: "teamPreference",
     sectionId: "project",
-    order: 4,
+    order: 6,
+    showToReviewer: true,
     field: {
       type: "radio",
       label: "Team Preference",
@@ -180,7 +276,8 @@ const questions = {
   dietaryRestrictions: {
     id: "dietaryRestrictions",
     sectionId: "logistics",
-    order: 5,
+    order: 7,
+    showToReviewer: true,
     field: {
       type: "custom",
       label: "Dietary Restrictions",
@@ -203,7 +300,8 @@ const questions = {
   tshirtSize: {
     id: "tshirtSize",
     sectionId: "logistics",
-    order: 6,
+    order: 8,
+    showToReviewer: false,
     field: {
       type: "select",
       label: "T-Shirt Size",
@@ -222,7 +320,8 @@ const questions = {
   emergencyContact: {
     id: "emergencyContact",
     sectionId: "logistics",
-    order: 7,
+    order: 9,
+    showToReviewer: false,
     field: {
       type: "text",
       label: "Emergency Contact",

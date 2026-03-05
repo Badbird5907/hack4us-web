@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useMutation } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useQuery } from "@/hooks/convex";
 import { authClient } from "@/lib/auth-client";
@@ -24,6 +24,7 @@ function buildInitialFormData(
   profile: {
     role?: string;
     educationLevel?: string;
+    marketingOptIn?: boolean;
     birthdate?: string;
     school?: string;
     year?: string;
@@ -51,6 +52,7 @@ function buildInitialFormData(
       profile?.educationLevel === "university"
         ? profile.educationLevel
         : "",
+    marketingOptIn: profile?.marketingOptIn === true,
     name: name || "",
     birthdate: profile?.birthdate || "",
     school: profile?.school || "",
@@ -89,6 +91,9 @@ function buildProfileUpdateArgs(
   if ("role" in data && data.role) args.role = data.role;
   if ("educationLevel" in data && data.educationLevel) {
     args.educationLevel = data.educationLevel;
+  }
+  if ("marketingOptIn" in data && typeof data.marketingOptIn === "boolean") {
+    args.marketingOptIn = data.marketingOptIn;
   }
   if ("birthdate" in data) args.birthdate = data.birthdate;
   if ("school" in data) args.school = data.school;
@@ -134,6 +139,7 @@ export function useProfileForm() {
   const profileResult = useQuery(api.fn.profile.getMyProfile, {});
   const applicationResult = useQuery(api.fn.application.getMyApplication, {});
   const updateProfile = useMutation(api.fn.profile.updateMyProfile);
+  const syncEmailToMailrelay = useAction(api.fn.email.syncEmailToMailrelay);
   const router = useRouter();
 
   const [step, setStep] = useState(0);
@@ -314,6 +320,24 @@ export function useProfileForm() {
     [isRoleEducationLocked, updateProfileField]
   );
 
+  const updateMarketingOptIn = useCallback(
+    (marketingOptIn: boolean) => {
+      updateProfileField("marketingOptIn", marketingOptIn, "immediate");
+
+      const email = session.data?.user?.email?.trim().toLowerCase();
+      if (!email) {
+        return;
+      }
+
+      void syncEmailToMailrelay({
+        email,
+        name: session.data?.user?.name || undefined,
+        marketingOptIn,
+      });
+    },
+    [session.data?.user?.email, session.data?.user?.name, syncEmailToMailrelay, updateProfileField]
+  );
+
   const updateSchool = useCallback(
     (school: string) => {
       updateProfileField("school", school, "debounced", (nextState) => ({
@@ -409,6 +433,7 @@ export function useProfileForm() {
     // Handlers
     updateRole,
     updateEducationLevel,
+    updateMarketingOptIn,
     updateName,
     updateBirthdate,
     updateSchool,

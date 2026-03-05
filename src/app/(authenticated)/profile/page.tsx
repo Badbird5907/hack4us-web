@@ -100,6 +100,7 @@ export default function ProfilePage() {
     isFormComplete,
     updateRole,
     updateEducationLevel,
+    updateMarketingOptIn,
     updateName,
     updateBirthdate,
     updateSchool,
@@ -139,8 +140,10 @@ export default function ProfilePage() {
         <StepRoleAndEducation
           role={formData.role}
           educationLevel={formData.educationLevel}
+          marketingOptIn={formData.marketingOptIn}
           onChangeRole={updateRole}
           onChangeEducationLevel={updateEducationLevel}
+          onChangeMarketingOptIn={updateMarketingOptIn}
           isSelectionLocked={isRoleEducationLocked}
           onGoNext={() => goNext(STEPS.length)}
         />
@@ -193,6 +196,7 @@ export default function ProfilePage() {
     formData,
     updateRole,
     updateEducationLevel,
+    updateMarketingOptIn,
     goNext,
     updateName,
     updateBirthdate,

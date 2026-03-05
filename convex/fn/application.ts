@@ -1,11 +1,22 @@
 import { ConvexError, v } from "convex/values";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
 import { mutation, query } from ".";
+import { applicationTypeValidator } from "../shared";
 
-const applicationTypeValidator = v.union(
-  v.literal("attendee"),
-  v.literal("mentor"),
-  v.literal("volunteer")
-);
+async function assertApplicationsOpen(ctx: MutationCtx | QueryCtx) {
+  const settings = await ctx.db
+    .query("siteSettings")
+    .withIndex("key", (q) => q.eq("key", "global"))
+    .first();
+
+  if ((settings?.applicationsState ?? "open") !== "open") {
+    throw new ConvexError({
+      code: "BAD_REQUEST",
+      message: "Applications are not accepting submissions right now.",
+    });
+  }
+}
 
 export const getMyApplication = query({
   args: {},
@@ -33,6 +44,8 @@ export const saveMyApplication = mutation({
     answers: v.record(v.string(), v.string()),
   },
   handler: async (ctx, args) => {
+    await assertApplicationsOpen(ctx);
+
     const existing = await ctx.db
       .query("application")
       .withIndex("userId", (q) => q.eq("userId", ctx.userId))
@@ -71,6 +84,8 @@ export const saveMyApplication = mutation({
 export const submitMyApplication = mutation({
   args: {},
   handler: async (ctx) => {
+    await assertApplicationsOpen(ctx);
+
     const existing = await ctx.db
       .query("application")
       .withIndex("userId", (q) => q.eq("userId", ctx.userId))
@@ -88,10 +103,16 @@ export const submitMyApplication = mutation({
       throw new ConvexError({ code: "BAD_REQUEST", message: "Cannot submit an empty application." });
     }
 
-    return await ctx.db.patch(existing._id, {
+    await ctx.db.patch(existing._id, {
       status: "submitted",
       submittedAt: Date.now(),
     });
+
+    if (process.env.ENABLE_AI_PRESCORE === "true") {
+      await ctx.scheduler.runAfter(0, internal.fn.ai.index.scoreApplication, {
+        applicationId: existing._id,
+      });
+    }
   },
 });
 
@@ -113,4 +134,5 @@ export const deleteMyDraftApplication = mutation({
 
     return await ctx.db.delete(existing._id);
   },
+  
 });

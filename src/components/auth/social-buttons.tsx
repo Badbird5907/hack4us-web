@@ -7,19 +7,32 @@ import GitHubIcon from "@/components/icons/github";
 
 interface SocialButtonsProps {
   callbackURL?: string;
+  beforeRedirect?: (provider: "google" | "github") => boolean | Promise<boolean>;
 }
 
-export function SocialAuthButtons({ callbackURL = "/" }: SocialButtonsProps) {
+export function SocialAuthButtons({ callbackURL = "/", beforeRedirect }: SocialButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<"google" | "github" | null>(null);
 
   const handleSocialSignIn = async (provider: "google" | "github") => {
-    setLoadingProvider(provider);
-    await authClient.signIn.social({
-      provider,
-      callbackURL,
-      errorCallbackURL: provider === "google" ? "/sign-in?error=google" : "/sign-in?error=github",
-    });
-    setLoadingProvider(null);
+    try {
+      setLoadingProvider(provider);
+
+      if (beforeRedirect) {
+        const canContinue = await beforeRedirect(provider);
+        if (!canContinue) {
+          setLoadingProvider(null);
+          return;
+        }
+      }
+
+      await authClient.signIn.social({
+        provider,
+        callbackURL,
+        errorCallbackURL: provider === "google" ? "/sign-in?error=google" : "/sign-in?error=github",
+      });
+    } finally {
+      setLoadingProvider(null);
+    }
   };
 
   return (

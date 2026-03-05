@@ -16,9 +16,15 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
   const next = searchParams.get("next") || "/"
+  const socialCallbackURL = `/social-complete?next=${encodeURIComponent(next)}`
+  const isFormReady =
+    name.trim().length > 0 &&
+    email.trim().length > 0 &&
+    password.length >= 8
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isFormReady) return
     setError(null)
     setSuccess(null)
     setLoading(true)
@@ -56,7 +62,7 @@ export default function SignUpPage() {
           <p className="mb-8 text-xs text-muted-foreground tracking-wide">
             Register to participate in the hackathon.
           </p>
-          <SocialAuthButtons callbackURL={next} />
+          <SocialAuthButtons callbackURL={socialCallbackURL} />
 
           <div className="flex items-center gap-3 py-4">
             <div className="h-px flex-1 bg-border" />
@@ -126,8 +132,12 @@ export default function SignUpPage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-primary px-8 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase transition-all hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={loading || !isFormReady}
+              className={`w-full px-8 py-4 text-sm font-bold tracking-widest uppercase transition-all disabled:cursor-not-allowed ${
+                loading || !isFormReady
+                  ? "bg-primary/50 text-muted-foreground"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
             >
               {loading ? "Creating Account…" : "Create Account"}
             </button>

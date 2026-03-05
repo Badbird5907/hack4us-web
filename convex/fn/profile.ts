@@ -5,6 +5,7 @@ export const updateMyProfile = mutation({
   args: {
     role: v.optional(v.union(v.literal("attendee"), v.literal("mentor"), v.literal("volunteer"), v.literal("organizer"))),
     educationLevel: v.optional(v.union(v.literal("high_school"), v.literal("university"))),
+    marketingOptIn: v.optional(v.boolean()),
     birthdate: v.optional(v.string()),
     school: v.optional(v.string()),
     year: v.optional(v.string()),

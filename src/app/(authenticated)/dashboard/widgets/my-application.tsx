@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { useQuery } from "@/hooks/convex";
 import { applicationTypes } from "@/lib/questions";
 import { api } from "@convex/_generated/api";
-import { CheckCircle2, Clock3, FileText, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, FileText, Hourglass, XCircle } from "lucide-react";
 
 const statuses = {
   draft: {
@@ -18,7 +18,7 @@ const statuses = {
     icon: Clock3,
   },
   submitted: {
-    label: "Submitted",
+    label: "Under Review",
     badgeClassName: "bg-blue-500/15 text-blue-700 border-blue-500/30",
     summary: "Your application has been submitted and is now under review.",
     detail: "We will notify you once a decision is available.",
@@ -37,6 +37,13 @@ const statuses = {
     summary: "Your application has been reviewed and was not accepted.",
     detail: "If you need help or have questions, contact the organizing team.",
     icon: XCircle,
+  },
+  waitlist: {
+    label: "Waitlisted",
+    badgeClassName: "bg-amber-500/15 text-amber-700 border-amber-500/30",
+    summary: "You have been placed on the waitlist.",
+    detail: "We will reach out if a spot opens up. Keep an eye on your email.",
+    icon: Hourglass,
   },
 } as const;
 
@@ -71,8 +78,14 @@ function getDraftCompletion(application: {
 
 export function MyApplicationWidget() {
   const applicationResult = useQuery(api.fn.application.getMyApplication, {});
+  const applicationsState = useQuery(api.fn.siteSettings.getApplicationsState, {}) ?? "open";
   const application = applicationResult?.application;
   const profileRole = applicationResult?.profileRole;
+  const applicationsUnavailable = applicationsState !== "open";
+  const applicationsMessage =
+    applicationsState === "ended"
+      ? "Applications have ended."
+      : "Applications will open soon.";
 
   if (applicationResult === undefined) {
     return (
@@ -87,7 +100,7 @@ export function MyApplicationWidget() {
       </Card>
     );
   }
-
+  
   if (!application) {
     return (
       <Card className="self-start overflow-hidden border-primary/20 bg-linear-to-br from-primary/5 to-background">
@@ -100,19 +113,29 @@ export function MyApplicationWidget() {
         </CardHeader>
         <CardContent>
           <div className="rounded-lg border border-dashed bg-background/70 p-4 text-sm text-muted-foreground">
-            Start your application to track status updates and review progress here.
+            {applicationsUnavailable
+              ? applicationsMessage
+              : "Start your application to track status updates and review progress here."}
           </div>
         </CardContent>
         <CardFooter>
-          <Button asChild className="w-full">
-            <Link href="/apply">Start Application</Link>
-          </Button>
+          {applicationsUnavailable ? (
+            <Button disabled className="w-full">
+              Applications Unavailable
+            </Button>
+          ) : (
+            <Button asChild className="w-full">
+              <Link href="/apply">Start Application</Link>
+            </Button>
+          )}
         </CardFooter>
       </Card>
     );
   }
 
-  const status = statuses[application.status];
+  const effectiveStatus: keyof typeof statuses =
+    application.decision?.status ?? application.status;
+  const status = statuses[effectiveStatus];
   const StatusIcon = status.icon;
   const draftCompletion = application.status === "draft" ? getDraftCompletion(application) : null;
   const submissionDate =
@@ -130,6 +153,11 @@ export function MyApplicationWidget() {
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">{status.summary}</p>
+        {applicationsUnavailable && (
+          <div className="rounded-lg border border-border bg-background/80 p-3 text-xs text-muted-foreground">
+            {applicationsMessage}
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="flex-1 min-h-0 space-y-4">
@@ -168,9 +196,15 @@ export function MyApplicationWidget() {
         <p className="text-xs text-muted-foreground">You will be notified via email when your application is reviewed.</p>
       </CardContent>
       <CardFooter className="mt-auto justify-between gap-3 border-t">
-        <Button asChild variant={application.status === "draft" ? "default" : "outline"} className="w-full">
+        <Button
+          asChild
+          variant={application.status === "draft" && !applicationsUnavailable ? "default" : "outline"}
+          className="w-full"
+        >
           <Link href="/apply">
-            {application.status === "draft" ? "Continue Application" : "View Application"}
+            {application.status === "draft" && !applicationsUnavailable
+              ? "Continue Application"
+              : "View Application"}
           </Link>
         </Button>
       </CardFooter>
