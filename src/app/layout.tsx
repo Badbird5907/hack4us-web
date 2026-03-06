@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { ConvexClientProvider } from "@/components/convex-client";
 import { getToken } from "@/lib/auth-server";
 
@@ -30,6 +31,7 @@ export default async function RootLayout({
         <ConvexClientProvider initialToken={token}>
           {children}
         </ConvexClientProvider>
+        <Analytics />
       </body>
     </html>
   );
