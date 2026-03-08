@@ -115,8 +115,8 @@ export function Faq() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.15 }}
-          className="border-t border-border"
-        >
+	  className="rounded-2xl border border-border/80 bg-background/85 px-5 backdrop-blur-sm md:px-8"
+	>
           {FAQ_ITEMS.map((item, i) => (
             <FaqItem
               key={i}

@@ -130,36 +130,47 @@ export function Hero() {
           style={{ opacity: heroContentOpacity, y: heroContentY }}
           className="absolute inset-0 mx-auto flex max-w-7xl flex-col justify-center px-6 pt-16 will-change-transform"
         >
-          <div className="max-w-4xl">
-            <div className="mb-8 flex items-center gap-4">
-              <div className="h-px w-12 bg-primary" />
-              <span className="text-xs font-bold tracking-[0.3em] text-primary uppercase">
-                36-Hour Hackathon
-              </span>
-            </div>
+          <div className="relative max-w-4xl">
+            <div // fading out around the hero content so its more readable
+              className="pointer-events-none absolute -inset-x-10 -inset-y-8 rounded-3xl blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(ellipse 78% 72% at 42% 44%, rgba(2, 6, 23, 0.56) 0%, rgba(2, 6, 23, 0.42) 40%, rgba(2, 6, 23, 0.18) 66%, rgba(2, 6, 23, 0) 88%)",
+              }}
+              aria-hidden="true"
+            />
 
-            <Hack4UsLogo className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 text-balance" />
+            <div className="relative z-10">
+              <div className="mb-8 flex items-center gap-4">
+                <div className="h-px w-12 bg-primary" />
+                <span className="text-xs font-bold tracking-[0.3em] text-primary uppercase">
+                  36-Hour Hackathon
+                </span>
+              </div>
 
-            <p className="mb-12 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-              A premier 36-hour hackathon bringing students together to design
-              innovative solutions for sustainable and inclusive cities. Where
-              software meets hardware to tackle real environmental challenges.
-            </p>
+              <Hack4UsLogo className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 text-balance" />
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Link
-                href="/apply"
-                className="group inline-flex items-center gap-3 bg-primary px-8 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase transition-all hover:bg-primary/90"
-              >
-                Register Now
-                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                href="#about"
-                className="inline-flex items-center gap-3 border border-border px-8 py-4 text-sm font-bold tracking-widest text-foreground uppercase transition-all hover:border-foreground"
-              >
-                Learn More
-              </Link>
+              <p className="mb-12 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+                A premier 36-hour hackathon bringing students together to design
+                innovative solutions for sustainable and inclusive cities. Where
+                software meets hardware to tackle real environmental challenges.
+              </p>
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <Link
+                  href="/apply"
+                  className="group inline-flex items-center gap-3 bg-primary px-8 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase transition-all hover:bg-primary/90"
+                >
+                  Register Now
+                  <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </Link>
+                <Link
+                  href="#about"
+                  className="inline-flex items-center gap-3 border border-border px-8 py-4 text-sm font-bold tracking-widest text-foreground uppercase transition-all hover:border-foreground"
+                >
+                  Learn More
+                </Link>
+              </div>
             </div>
           </div>
         </motion.div>
