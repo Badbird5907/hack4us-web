@@ -1,5 +1,4 @@
 import { Hero } from "@/components/landing/hero";
-import { Tracks } from "@/components/landing/tracks";
 import { Sponsors } from "@/components/landing/sponsors";
 import { Schedule } from "@/components/landing/schedule";
 import { Faq } from "@/components/landing/faq";
@@ -13,7 +12,6 @@ export default function Home() {
       <main className="relative">
         <PageBackground />
         <Hero />
-        <Tracks />
         <Sponsors />
         <Schedule />
         <Faq />
