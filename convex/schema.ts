@@ -116,4 +116,6 @@ export default defineSchema({
     updatedAt: v.number(),
     updatedBy: v.string(),
   }).index("key", ["key"]),
+
+  
 });
