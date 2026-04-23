@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
-import Link from "next/link";
+import { ArrowUpRight, HeartHandshake, Mail } from "lucide-react";
 import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface SponsorTier {
   name: string;
@@ -55,6 +56,7 @@ const tierVariants = {
 export function Sponsors() {
   return (
     <section
+      id="about"
       className="relative min-h-screen flex items-center"
     >
       {/* Horizontal rule accents */}
@@ -132,13 +134,75 @@ export function Sponsors() {
           <p className="mb-6 text-sm text-muted-foreground">
             Interested in supporting the next generation of innovators?
           </p>
-          <Link
-            href="#sponsor"
-            className="group inline-flex items-center gap-3 border border-primary bg-primary/10 px-8 py-4 text-sm font-bold tracking-widest text-primary uppercase transition-all hover:bg-primary hover:text-primary-foreground"
-          >
-            Become a Sponsor
-            <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-          </Link>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                className="group inline-flex items-center gap-3 border border-primary bg-primary/10 px-8 py-4 text-sm font-bold tracking-widest text-primary uppercase transition-all hover:bg-primary hover:text-primary-foreground"
+              >
+                Become a Sponsor
+                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="gap-0 sm:max-w-md">
+              <DialogHeader className="space-y-3 text-left">
+                <DialogTitle className="text-xl font-black tracking-tight sm:text-2xl">
+                  Sponsor Us
+                </DialogTitle>
+                <DialogDescription className="text-base leading-relaxed">
+                  Thank you for your interest in sponsoring Hack4Us!
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-6 grid gap-4">
+                <div className="flex gap-4 rounded-lg border border-border bg-card/60 p-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-primary">
+                    <Mail className="h-5 w-5" aria-hidden />
+                  </div>
+                  <div className="min-w-0 space-y-1.5">
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Sponsorship inquiries
+                    </p>
+                    <p className="text-sm leading-relaxed text-foreground">
+                      For packages and partnership details, email{" "}
+                      <a
+                        href="mailto:sponsors@hack4us.ca"
+                        className="font-semibold text-primary underline-offset-4 hover:underline break-all"
+                      >
+                        sponsors@hack4us.ca
+                      </a>
+                      .
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 rounded-lg border border-border bg-card/60 p-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-primary">
+                    <HeartHandshake className="h-5 w-5" aria-hidden />
+                  </div>
+                  <div className="min-w-0 flex flex-col gap-3">
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                        Small donations
+                      </p>
+                      <p className="text-sm leading-relaxed text-foreground">
+                        Prefer to contribute a one-time or smaller amount? You can donate securely here:
+                      </p>
+                    </div>
+                    <Button asChild className="w-full font-bold tracking-wide sm:w-fit">
+                      <a
+                        href="https://hcb.hackclub.com/donations/start/hack4us"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Donate now
+                        <ArrowUpRight className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </motion.div>
       </div>
     </section>
