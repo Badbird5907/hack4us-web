@@ -181,10 +181,10 @@ export function Hero() {
         >
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-border opacity-85 md:grid-cols-4 border border-border">
             {[
-              { label: "DATE", value: "XYZ 32-34, 2026" },
+              { label: "DATE", value: "TBD, 2026" },
               { label: "LOCATION", value: "TORONTO" },
-              { label: "PARTICIPANTS", value: "67+" },
-              { label: "IN PRIZES", value: "$69,420" },
+              { label: "PARTICIPANTS", value: "100+" },
+              { label: "IN PRIZES", value: "???" },
             ].map((item) => (
               <div key={item.label} className="bg-background opacity px-6 py-5">
                 <span className="mb-1 block text-[10px] font-semibold tracking-[0.2em] text-primary uppercase">
