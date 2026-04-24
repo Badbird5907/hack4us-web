@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Github, Linkedin, ArrowLeft, ArrowRight,Globe } from "lucide-react";
 import { motion } from "motion/react";
+import Image from "next/image";
 
 const TEAM_MEMBERS = [
   {
@@ -10,7 +11,10 @@ const TEAM_MEMBERS = [
     role: "President",
     initials: "CS",
     bio: "President of Hack4Us.",
-    links: []
+    links: [
+      
+    ],
+    image: "/people/cindy.webp",
   },
   {
     name: "Evan Yu",
@@ -22,6 +26,7 @@ const TEAM_MEMBERS = [
       "https://www.linkedin.com/in/ev-yu",
       "https://evanyu.dev/",
     ],
+    image: "/people/evan.jpg",
   },
   {
     name: "Aaron Huang",
@@ -37,15 +42,17 @@ const TEAM_MEMBERS = [
     name: "Nolan Kotler",
     role: "Finance Lead",
     initials: "NK",
-    bio: "",
+    bio: "I love Star Wars and building Lego",
     links: [],
+    image: "/people/nolan.jpg",
   },
   {
     name: "Ian Rosenthal",
     role: "Outreach Lead",
     initials: "IR",
-    bio: "",
+    bio: "Huge fan of science fiction",
     links: [],
+    image: "/people/ian.jpg",
   },
   {
     name: "Silver Wu",
@@ -55,8 +62,42 @@ const TEAM_MEMBERS = [
     links: [
       "https://www.linkedin.com/in/wusilverraccoon/"
     ],
+    image: "/people/silver.png",
   },
 ];
+
+function TeamMemberImage({
+  image,
+  alt,
+  initials,
+}: {
+  image: string | undefined;
+  alt: string;
+  initials: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const showImage = image && !failed;
+
+  return (
+    <>
+      {showImage && (
+        <Image
+          src={image}
+          alt={alt}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+          sizes="(max-width: 768px) 280px, 320px"
+          onError={() => setFailed(true)}
+        />
+      )}
+      {(!image || failed) && (
+        <span className="relative text-5xl md:text-6xl font-black tracking-tight text-foreground/10 group-hover:text-primary/20 transition-colors">
+          {initials}
+        </span>
+      )}
+    </>
+  );
+}
 
 export function Team() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -166,10 +207,12 @@ export function Team() {
               key={member.name}
               className="group relative shrink-0 w-[280px] md:w-[320px] border border-border bg-card/30 transition-all hover:border-primary/50 hover:bg-card/60 flex flex-col"
             >
-              <div className="relative h-48 md:h-56 bg-secondary/50 flex items-center justify-center overflow-hidden">
-                 <span className="relative text-5xl md:text-6xl font-black tracking-tight text-foreground/10 group-hover:text-primary/20 transition-colors">
-                  {member.initials}
-                </span>
+              <div className="relative h-56 md:h-64 bg-secondary/50 flex items-center justify-center overflow-hidden">
+                <TeamMemberImage
+                  image={member.image}
+                  alt={member.name}
+                  initials={member.initials}
+                />
               </div>
 
               <div className="p-6 flex flex-col flex-1">
