@@ -20,7 +20,7 @@ const TEAM_MEMBERS = [
     name: "Evan Yu",
     role: "Web Lead",
     initials: "EY",
-    bio: "Math @ UofT, SWE @ ConnectAlum, Full Stack Engineer",
+    bio: "I write code for fun and profit",
     links: [
       "https://github.com/Badbird5907",
       "https://www.linkedin.com/in/ev-yu",
