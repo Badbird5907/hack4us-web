@@ -37,6 +37,7 @@ const TEAM_MEMBERS = [
       "https://github.com/runthebot",
       "https://runthebot.me/",
     ],
+    image: "/people/aaron.jpg",
   },
   {
     name: "Nolan Kotler",
