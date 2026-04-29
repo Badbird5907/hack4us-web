@@ -151,7 +151,7 @@ export function Hero() {
               <Hack4UsLogo className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 text-balance" />
 
               <p className="mb-12 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-                A premier 36-hour hackathon bringing students together to design
+                A premier 36-hour hackathon bringing <span className="text-primary font-bold">high-school students</span> together to design
                 innovative solutions for sustainable and inclusive cities. Where
                 software meets hardware to tackle real environmental challenges.
               </p>
